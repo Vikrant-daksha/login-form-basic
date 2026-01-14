@@ -5,19 +5,21 @@ import { LiaSignInAltSolid } from "react-icons/lia";
 import { FaGoogle, FaApple } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6"
 import { LuEye, LuEyeClosed } from "react-icons/lu";
-import axios from "axios";
+import api from "../api/axiosinstance";
+import { useAuth } from "../context/Authcontext";
 
 
 export function Signin(){
 
-    const history = useNavigate()
+    const navigate = useNavigate()
 
     const [username, setUsername] = useState('');
     const [passCheck, setPassCheck] = useState('')
     const [password, setPassword] = useState('');
-
+    
     const [showPass, setShowPass] = useState(false)
-
+    const { setUser } = useAuth()
+    
     const passToggle = () => {
         setShowPass(prev => !prev)
     };
@@ -30,23 +32,28 @@ export function Signin(){
                 alert("Username and password cannot be empty.");
                 return
             }
-
+            
             if (passCheck !== password) {
                 alert("Passwords do not match.")
                 return
             }
-
-            await axios.post("http://localhost:5000/signin",{
+            
+            await api.post("/signin",{
                 username,password
-            }).then(res => {
-                if(res.data === "exist"){
+            }).then(async res => {
+                if(res.data.success === false){
                     alert("User Already Exist")
                 }
-                else if(res.data === "notexist"){
-                    history("/home", {state:{id:username}})
-                }
+                else if(res.data.success === true){
+                    const token = res.data.token 
+                    if (token) {
+                        localStorage.setItem("token", token)
+                        setUser({token})
+                    }
+                    navigate('/');
+                } 
             })
-            .catch( e => {
+            .catch(e => {
                 alert("wrong details")
                 console.log(e)
             })
@@ -68,7 +75,7 @@ export function Signin(){
                             <p className="flex items-center justify-center font-semibold text-2xl mb-1.5">Siging In</p>
                             <p className="flex items-center justify-center text-sm text-gray-700">Please enter your details to sign in.</p>
                         </div>
-                        <form>
+                        <form onSubmit={submit}>
                             <div className="flex justify-between mb-7">
                                 <button className="px-13 py-2 border border-gray-300 rounded-md text-xl"><FaApple /></button>
                                 <button className="px-13 py-2 border border-gray-300 rounded-md text-lg"><FaGoogle /></button>
@@ -100,7 +107,7 @@ export function Signin(){
                                 </span>
                             </div>
                             <div className="min-w-full min-h-11">
-                                <button className="border rounded-lg min-h-11 min-w-full bg-black text-white font-semibold hover:" onClick = {submit}>Sign In</button>
+                                <button className="border rounded-lg min-h-11 min-w-full bg-black text-white font-semibold" onClick = {submit}>Sign In</button>
                             </div>
                             <div className="mt-4.5 flex items-center justify-center">
                                 <p className="justify-between">Already have an account? <Link to="/login" className="font-semibold">Login</Link></p> 

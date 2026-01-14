@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
 #root {
   max-width: auto;
   min-height: 100vh;
@@ -153,4 +154,13 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* global.css OR inside <style jsx global> */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE, Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari */
 }
