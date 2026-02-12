@@ -1,0 +1,28 @@
+/* CSS reset */
+* {
+  box-sizing: border-box;
+}
+
+/* Root elements */
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background-color: #fff;
+  color: #111;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.animate-scroll {
+  animation: scroll 15s linear infinite;
+}
+
+@keyframes scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
