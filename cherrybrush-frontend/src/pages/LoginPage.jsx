@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { useState } from "react";
 import '../App.css'
 import { LiaSignInAltSolid } from "react-icons/lia";
@@ -10,6 +10,9 @@ import api from "../api/axiosinstance.ts";
 import { useAuth } from "../context/Authcontext";
 
 export function Login(){
+
+    const [userData, setUserData] = useState(null);
+    const [error, setError] = useState(null);
 
     const navigate = useNavigate()
 
@@ -26,6 +29,15 @@ export function Login(){
     
     async function submit(e) {
         e.preventDefault();
+
+        try{
+            const userData = {name: username, email:password};
+            console.log(userData);
+            const res = await api.post("/api/create", userData);
+            console.log("USer Added", res.data);
+        } catch (err) {
+            console.error("Error", err);
+        }
         
         try{
             if(!username || !password){

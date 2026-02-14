@@ -1,23 +1,21 @@
-import pg from "pg"
+import { Pool } from "pg"
 import env from "dotenv"
 
 env.config();
 
-console.log(process.env.PG_PASSWORD)
-
-const db = new pg.Client({
+const pool = new Pool({
     user: process.env.PG_USER,
     host: process.env.PG_HOST,
     database: process.env.PG_DATABASE,
     password: process.env.PG_PASSWORD,
-    port: Number(process.env.PG_PORT),
+    port: Number(process.env.PG_PORT)
 });
 
-db.connect();
+pool.connect();
 
-db.on('error', (err) => {
+pool.on('error', (err) => {
     console.error('Unexpected error', err);
     process.exit(-1);
 });
 
-export const query = (text, params) => db.query(text, params);
+export const query = (text, params) => pool.query(text, params);

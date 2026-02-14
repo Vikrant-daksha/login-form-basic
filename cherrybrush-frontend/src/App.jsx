@@ -11,9 +11,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { Product } from './pages/product';
 import { Collections } from './pages/collections';
 import { Layout } from './Layout';
-import { ProductList } from './components/ProductList';
 import { ProductDetails } from './pages/ProductPage';
 import { Catalog } from './pages/Catalog';
+import SearchPage from './pages/SearchPage';
 
 function App() {
   const { user , loading } = useAuth()
@@ -33,6 +33,7 @@ function App() {
             <Route path="/collections" element={<Collections/>} />
             <Route path="/" element={<Home />} />
             <Route path="/catalog" element={<Catalog/>} />
+            <Route path='/search' element={<SearchPage/>} />
             <Route path="/products/:productname" element={<ProductDetails />} />
             </Route>
         </Routes>

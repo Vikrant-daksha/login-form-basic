@@ -30,18 +30,18 @@ export function ProductDetails(){
     <>
     <div className='w-full py-6 h-[100000px]'>
       <div>
-        <div className='w-full grid grid-cols-2 px-12'>
-          <div className='flex sticky top-16 pt-2 pr-6 h-min'>
-            <ul className='w-fit pr-2'>
-              <li><img src={prod.image} className='aspect-square mb-1'></img></li>
-              <li><img src={prod.image} className='aspect-square mb-1'></img></li>
-              <li><img src={prod.image} className='aspect-square mb-1'></img></li>
-              <li><img src={prod.image} className='aspect-square mb-1'></img></li>
-              <li><img src={prod.image} className='aspect-square mb-1'></img></li>
+        <div className='w-full grid grid-cols-1 px-6 md:grid-cols-2 md:px-12'>
+          <div className='w-full flex justify-center top-24 pb-5 h-min md:sticky md:pr-5'>
+            <ul className='min-w-10 pr-2'>
+              <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.image}></img></li>
+              <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.image}></img></li>
+              <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.image}></img></li>
+              <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.image}></img></li>
+              <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.image}></img></li>
             </ul>
-            <div id='mainImg' className='relative'>
-              <div className='absolute top-2 left-2 bg-white z-10 p-2.5 rounded-full'><FaHeart/></div>
-              <img src={prod.image} className='sticky w-fit aspect-square'></img>
+            <div id='mainImg' className='relative w-fit aspect-square min-w-64 max-w-md'>
+                <div className='absolute top-2 left-2 bg-white z-10 p-2 rounded-full'><FaHeart/></div>
+                <div className='sticky object-contain aspect-square'><img src={prod.image} className='sticky aspect-square '></img></div>
             </div>
           </div>
           <div className='px-4'>
