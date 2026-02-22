@@ -1,12 +1,12 @@
 import { useState } from "react"
-import React from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { GiHamburgerMenu } from "react-icons/gi"
 import { IoClose } from "react-icons/io5"
 import '../App.css'
-import { useAuth } from "../context/Authcontext.tsx"
+import { useAuth } from "../context/Authcontext.jsx"
 import { User2 } from "lucide-react"
 import { FaCartShopping } from "react-icons/fa6"
+import { LuLogOut } from "react-icons/lu"
 
 export function Navbar(){
 
@@ -94,15 +94,14 @@ export function Navbar(){
             </div>
             <div className="hidden sm:flex pr-7">
                 <div className="flex items-center px-5 text-xl">
-                    <Link to="/services" className="flex items-center"><FaCartShopping></FaCartShopping></Link>
+                    <Link to="/cart" className="flex items-center"><FaCartShopping></FaCartShopping></Link>
                 </div>
                 
                 {user ? (
                     <>
-                    <div><Link to="/account" className="text-lg px-5">Account</Link></div>
                     <div className="inline-flex items-center">
-                        <Link to="/account" className="mr-0.5 p-0.5 border rounded-full"><User2/></Link>
-                        <button onClick={handleLogout} className="font-bold text-12 px-2.5 py-0.5 rounded-xl bg-red-500 text-white">Logout</button>
+                        <Link to="/account" className="p-0.5 border rounded-full mr-2"><User2/></Link>
+                        <button onClick={handleLogout} className="font-semibold px-2.5 py-3 rounded-lg bg-red-500 text-white stroke-2"><LuLogOut className="stroke-2"/></button>
                     </div>
                     </>
                 ) : (
@@ -124,6 +123,7 @@ export function Navbar(){
                     <li className="px-5 py-2.5 border-b border-white">Custom</li>
                     <li className="px-5 py-2.5 border-b border-white">Nail Polish</li>
                     <li className="px-5 py-2.5 border-b border-white">Nail Care</li>
+                    <Link to="/cart">CART</Link>
                 </ul>
                 {user ? (
                     <>

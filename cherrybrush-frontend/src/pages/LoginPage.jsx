@@ -6,7 +6,7 @@ import { FaGoogle, FaApple } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6"
 import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../api/axiosinstance.ts";
+import api from "../api/axiosinstance.jsx";
 import { useAuth } from "../context/Authcontext";
 
 export function Login(){
@@ -31,58 +31,23 @@ export function Login(){
         e.preventDefault();
 
         try{
-            const userData = {name: username, email:password};
-            console.log(userData);
-            const res = await api.post("/api/create", userData);
-            console.log("USer Added", res.data);
-        } catch (err) {
-            console.error("Error", err);
-        }
-        
-        try{
             if(!username || !password){
                 alert("Username / Password cannot be Empty");
                 return;
             }
-            
-            const res = await api.post("/login",{
-                username,
-                password
-            })
-
-            
-            if(!res || !res.data) {
-                alert("Server Error");
-                return;
-            }
-            
-            const { success, message, token, username: validuser } = res.data
-            
-            if (success){
-                
-                if ( token ) {
-                    localStorage.setItem("token", token);
-                    setUser({token})
-                }
-                try {
-                    const res = await api.get("/auth", {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
-                } catch (err) {
-                    console.error(err);
-                    alert("You are not authorized");
-                }
-                alert(message)
-                navigate("/")
-                
+            const trimUsername = username.trim();
+            const userData = { identifier: trimUsername, password: password };
+            const res = await api.post("/api/auth/login", userData);
+            if(res.data) {
+                localStorage.setItem("token", res.data);
+                setUser(res.data);
+                navigate("/");
             } else {
-                alert(message || "Login Failed.")
+                console.error("Could Not Login", res.data)
             }
-            
-        } catch (e) {
-            console.log(e)
+        } catch (err) {
+            alert("User does not Exist");
+            console.error("Error", err);
         }
     }
     
@@ -90,7 +55,7 @@ export function Login(){
         <>
             <div className="no-select-global">
                 <div className="flex items-center justify-center flex-col mt-28 mb-28">
-                    <div className="border min-w-80 p-6 rounded-2xl md:min-w-96">
+                    <div className="border min-w-96 p-6 rounded-2xl md:min-w-96">
                         <div className="flex items-center justify-center text-7xl mb-2.5">
                             <LiaSignInAltSolid />
                         </div>
@@ -139,7 +104,7 @@ export function Login(){
                                 <button className="border rounded-lg min-h-11 min-w-full bg-black text-white font-semibold" onClick = {submit}>Login</button>
                             </div>
                             <div className="mt-4.5 flex items-center justify-center">
-                                <p className="justify-between">Don't have an account yet? <Link to="/signin" className="font-semibold"> Sign Up</Link></p> 
+                                <p className="justify-between">Don't have an account yet? <Link to="/register" className="font-semibold"> Sign Up</Link></p> 
                             </div>
                         </form>
                     </div>

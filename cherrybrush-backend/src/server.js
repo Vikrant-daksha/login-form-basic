@@ -8,39 +8,46 @@ import { v4 as uuid } from "uuid";
 import path from "path";
 import { fileURLToPath } from "url";
 import clientRoutes from "./routes/clientRoutes.js"
+import authRoutes from "./routes/authRoutes.js"
+import cookieParser from "cookie-parser"
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // go UP from backend → project root → frontend/dist
-const Dist = path.join(__dirname, "..", "dist");
+//const Dist = path.join(__dirname, "..", "dist");
 
 
-const app = express()
+const app = express();
 
-app.use(cors())
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-app.use(express.static(Dist));
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+//app.use(express.static(Dist));
 
 app.use("/api", clientRoutes);
-
+app.use("/api/auth", authRoutes);
+  
 const MONGO_URI = process.env.MONGO_DB
 
 function tokenAuthentication(req, res, next){
-    const authToken = req.headers["authorization"];
-    const validateToken = authToken && authToken.split(" ")[1];
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
     
-    if (!validateToken) return res.status(401).json({ 
+    if (!token) return res.status(401).json({ 
         message:"Token Missing",
         valid: false
     })
     
-    jwt.verify(validateToken, process.env.JWT_KEY, (err, load) => {
-        if (err) return res.status(403).json({ message: "Invalid Token"})
-            const decode = jwt.verify(validateToken, process.env.JWT_KEY);
-        req.userId = decode.userId;
-        req.load = load
+    jwt.verify(token, process.env.JWT_KEY, (err, user) => {
+        if (err) return res.status(403).json({ message: "Invalid Token"});
+        
+        req.userId = user;
         next();
     });
 }
@@ -49,28 +56,28 @@ mongoose.connect(MONGO_URI).then(
     () => {
         console.log("Mangodb Connected");
     }).catch(() => {
-    console.log("Failed");
-})
-
-
-const userSchema = new mongoose.Schema({
-    userId:{
-        type:String,
-        required:true,
-        unique:true
-    },
-    username:{
-        type:String,
-        required:true
-    },
-    password:{
-        type: String,
-        required:true
-    },
-    email:{
-        type:String,
-        required:false,
-        unique:true,
+        console.log("Failed");
+    })
+    
+    
+    const userSchema = new mongoose.Schema({
+        userId:{
+            type:String,
+            required:true,
+            unique:true
+        },
+        username:{
+            type:String,
+            required:true
+        },
+        password:{
+            type: String,
+            required:true
+        },
+        email:{
+            type:String,
+            required:false,
+            unique:true,
         sparse:true
     },
     phone: {
@@ -176,7 +183,7 @@ app.post("/login", async(req, res) => {
             const token = jwt.sign(
                 { id: check.userId },
                 process.env.JWT_KEY,
-                { expiresIn : "1h" }
+                { expiresIn : "5s" }
             )
             
             res.json({
@@ -199,7 +206,7 @@ app.post("/login", async(req, res) => {
     }
 })
 
-app.post("/signin", async(req, res) => {
+app.post("/register", async(req, res) => {
     const{username, password} = req.body;
     const userId = uuid();
     
@@ -249,7 +256,6 @@ app.post("/signin", async(req, res) => {
 
 
 app.get("/auth", tokenAuthentication, (req, res) => {
-    
     res.json({ 
         message: `Hello you are authorized.`,
         valid: true
@@ -282,6 +288,7 @@ app.get("/product", async(req, res) => {
     })
 });
 
+
 app.post("/product/prod", async(req, res) => {
     const { productname } = req.body;
     
@@ -304,9 +311,9 @@ app.post("/api/cart", async (req, res) => {
     res.send("Added to cart");
 });
 
-app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(Dist, "index.html"));
-  });
+// app.get(/.*/, (req, res) => {
+//     res.sendFile(path.join(Dist, "index.html"));
+//   });
   
   
 const PORT = process.env.PORT || 3000;

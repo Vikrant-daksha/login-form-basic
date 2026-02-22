@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "../context/Authcontext.tsx";
+import { useAuth } from "../context/Authcontext.jsx";
 import FullBanner from "../assets/BannerFull.png"
 import HalfBanner from"../assets/BannerHalf.png"
 import PImage from "../assets/Product-img.webp"
 import { FaUser } from "react-icons/fa6";
 import { Carousel } from "../components/Carousel.jsx";
-import { ProductList } from "../components/ProductList.tsx";
+import { ProductList } from "../components/ProductList.jsx";
+import api from "../api/axiosinstance.jsx";
 
 
 export function Home(){
@@ -28,7 +29,7 @@ export function Home(){
         </div>
         <div id="Product-List" className="w-flex flex-col h-auto px-3 overflow-x-scroll overflow-auto scrollbar-hide md:mx-40">
             <Carousel speed={0.5}>
-                <ProductList amt={7} layout={"flex"}/>
+                <ProductList amt={28} layout={"flex"}/>
             </Carousel>
         </div>
         <div id="Comments" className="mt-16 mb-12 px-6">

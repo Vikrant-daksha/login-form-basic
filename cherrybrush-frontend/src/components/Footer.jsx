@@ -4,7 +4,7 @@ import { FaCopyright, FaHeart, FaRegCopy } from "react-icons/fa6";
 export function Footer(){
     return(
         <>
-        <footer id="Desktop" className="hidden bg-pink-100 mt-10 px-16 py-10 md:flex justify-evenly text-center text-wrap uppercase text-[14px] border-b border-gray-400">
+        <footer id="Desktop" className="hidden bg-pink-100 px-16 py-10 md:flex justify-evenly text-center text-wrap uppercase text-[14px] border-b border-gray-400">
         <ul className="px-8 space-y-1">
             <li className="mb-2 text-[12px] font-light">SUPPORT</li>
             <li>Privacy Policy</li>

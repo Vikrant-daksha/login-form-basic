@@ -9,7 +9,7 @@ import api from "../api/axiosinstance";
 import { useAuth } from "../context/Authcontext";
 
 
-export function Signin(){
+export function Register(){
 
     const navigate = useNavigate()
 
@@ -28,6 +28,7 @@ export function Signin(){
         e.preventDefault();
 
         try{
+            
             if (!username || !password) {
                 alert("Username and password cannot be empty.");
                 return
@@ -37,27 +38,30 @@ export function Signin(){
                 alert("Passwords do not match.")
                 return
             }
-            
-            await api.post("/signin",{
-                username,password
-            }).then(async res => {
-                if(res.data.success === false){
-                    alert("User Already Exist")
-                }
-                else if(res.data.success === true){
-                    const token = res.data.token 
-                    if (token) {
-                        localStorage.setItem("token", token)
-                        setUser({token})
-                    }
-                    navigate('/');
-                } 
-            })
-            .catch(e => {
-                alert("wrong details")
-                console.log(e)
-            })
 
+            const trimUsername = username.trim(); 
+            
+            let userData = {};
+            if(!isNaN(trimUsername)) {
+                userData = { email: null, phone_no: trimUsername, password: password };
+            }
+
+            else if(trimUsername.includes("@")) {
+                userData = { email: trimUsername, phone_no: null, password: password };
+            }
+            else {
+                alert("Entered Value id neither mail nor Phone No");
+                return;
+            }
+            const res = await api.post("api/auth/register", userData);
+            if (res.data) {
+                localStorage.setItem("token", res.data);
+                setUser(res.data);
+                navigate("/");
+            } else {
+                console.error("Could Not Register")
+            }
+            
         } catch (e) {
             console.log(e)
         }
@@ -65,9 +69,9 @@ export function Signin(){
 
     return(
         <>
-            <div className="no-select-global flex items-center justify-center min-h-screen">
+            <div className="no-select-global">
                 <div className="flex items-center justify-center flex-col mt-28 mb-28">
-                    <div className="border min-w-md p-6 min-h-2/4 rounded-2xl">
+                    <div className="border min-w-96 p-6 rounded-2xl">
                         <div className="flex items-center justify-center text-7xl mb-2.5">
                             <LiaSignInAltSolid />
                         </div>
@@ -76,10 +80,10 @@ export function Signin(){
                             <p className="flex items-center justify-center text-sm text-gray-700">Please enter your details to sign in.</p>
                         </div>
                         <form onSubmit={submit}>
-                            <div className="flex justify-between mb-7">
-                                <button className="px-13 py-2 border border-gray-300 rounded-md text-xl"><FaApple /></button>
-                                <button className="px-13 py-2 border border-gray-300 rounded-md text-lg"><FaGoogle /></button>
-                                <button className="px-13 py-2 border border-gray-300 rounded-md text-lg"><FaXTwitter /></button>
+                            <div className="flex justify-evenly mb-7">
+                                <button className="px-3 sm:px-8 py-2 border border-gray-300 rounded-md text-xl"><FaApple /></button>
+                                <button className="px-3 sm:px-8 py-2 border border-gray-300 rounded-md text-lg"><FaGoogle /></button>
+                                <button className="px-3 sm:px-8 py-2 border border-gray-300 rounded-md text-lg"><FaXTwitter /></button>
                             </div>
                             <div className="flex justify-between items-center mb-5 max-h-1">
                                 <div className="border-b min-w-2/5 border-gray-300"></div>

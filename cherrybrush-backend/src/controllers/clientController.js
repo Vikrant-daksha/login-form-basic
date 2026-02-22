@@ -10,23 +10,24 @@ export const getUsers = async(req, res) => {
     }
 }
 
-export const createUser = async(req, res) => {
+export const profile = async(req, res) => {
     try {
-        const userData = req.body;
-        console.log(userData);
-        const newUser = await clientService.createUser(userData);
-        res.status(200).json(newUser);
-    } catch (err){
-        console.error('Error Creating User', err);
-        res.status(500).json({ message: 'Internal Server Error'});
+        const user = req.user;
+        if(!user) {
+            res.status(404).json({ message: 'User is Not Logged In' })
+        }
+        res.status(200).json(user);
+    } catch (err) {
+        console.error('Cannot Find User', err);
+        res.status(500).json({ message: 'Internal Server Error' })
     }
 }
 
+
 export const updateUser = async(req, res) => {
     try {
-        const userId = req.params.id;
+        const userId = req.id;
         const userData = req.body;
-        console.log(userData);
         const updatedUser = await clientService.updateUser(userData, userId);
         if(!updatedUser) {
             return res.status(404).json({ message: "User not Found" });
@@ -60,5 +61,40 @@ export const searchUser = async(req, res) => {
     } catch (err){
         console.error('Error Searching User', err);
         res.status(500).json({ message: 'Internal Server Error'});
+    }
+}
+
+export const productsList = async(req, res) => {
+    try {
+        const products = await clientService.getAllProducts();
+        res.status(200).json(products);
+    } catch (err) {
+        console.error('Error Cannot get Products', err);
+        res.status(500).json({ message: 'Internal Server Error' })
+    }
+} 
+
+export const getProductBySlug = async(req, res) => {
+    try {
+        const { slug } = req.params;
+        const product = await clientService.getSingleProduct(slug);
+        res.status(200).json(product);
+    } catch (err) {
+        console.error('Error Cannot get Products', err);
+        res.status(500).json({ message: 'Internal Server Error' })
+    }
+} 
+
+export const addToCart = async(req, res) => {
+    try {
+        const { product_id } = req.body;
+        const user_id = req.id;
+        const userCart = await clientService.getUserCart(user_id);
+        const { cart_id } = userCart
+        const addItem = await clientService.addItem(cart_id, product_id);
+        res.status(200).json(addItem);
+    } catch (err) {
+        console.error('Error Cannot get Products', err);
+        res.status(500).json({ message: 'Internal Server Error' })
     }
 }

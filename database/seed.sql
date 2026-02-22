@@ -20,17 +20,27 @@ VALUES ('Nail', 'this is a nail designed by cherrybrush', 1000, 'almond', 'blue'
 ('Pretty Nail', 'this is a nail designed by cherrybrush', 900, 'almond', 'blue', 'medium');
 
 --Cart Relation to user and product table
-INSERT INTO carts(user_id, product_id, quantity)
-VALUES (2, 4, 5),
-(1, 5, 1),
-(4, 6, 4),
-(3, 3, 10),
-(6, 1, 5),
-(5, 2, 2),
-(2, 1, 1),
-(7, 1, 2),
-(3, 6, 5),
-(4, 2, 3);
+INSERT INTO carts (user_id) 
+VALUES (2),
+(5),
+(1),
+(7),
+(3);
+
+--cart Items
+INSERT INTO cart_items (cart_id, product_id, quantity) 
+VALUES (1, 3, 2),
+(1, 1, 5),
+(1, 6, 1),
+(2, 2, 4),
+(2, 7, 2),
+(3, 5, 1),
+(4, 1, 3),
+(4, 4, 2),
+(4, 2, 6),
+(5, 3, 7),
+(5, 6, 2);
+
 
 
 --Cart linking logic

@@ -16,13 +16,10 @@ CREATE TABLE IF NOT EXISTS users(
 
 -- @block
 CREATE TABLE IF NOT EXISTS carts(
-    cart_id BIGINT SERIAL PRIMARY KEY,
-    user_id BIGINT,
-    product_id BIGINT,
-    quantity BIGINT
-    FOREIGN KEY (user_id) REFERENCES users (id)
-    FOREIGN KEY (product_id) REFERENCES products (product_id)
+    cart_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id)
 );
+
 
 -- @block
 CREATE TABLE IF NOT EXISTS products(
@@ -36,4 +33,11 @@ CREATE TABLE IF NOT EXISTS products(
     FOREIGN KEY (product_colors) REFERENCES product_colors (id),
     FOREIGN KEY (product_types) REFERENCES product_types (id),
     FOREIGN KEY (product_sizes) REFERENCES product_sizes (id)
+);
+
+CREATE TABLE IF NOT EXISTS cart_items(
+    cart_items_id BIGSERIAL PRIMARY KEY,
+    cart_id BIGINT REFERENCES carts(cart_id),
+    product_id BIGINT REFERENCES products(product_id),
+    quantity BIGINT
 );

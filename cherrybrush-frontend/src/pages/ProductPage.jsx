@@ -5,25 +5,31 @@ import { FaHeart } from 'react-icons/fa';
 
 export function ProductDetails(){
   
-  const { productname } = useParams(); // Access the dynamic parameter
+  const { slug } = useParams(); // Access the dynamic parameter
   const [prod, setProd] = useState(null);
+  const [selectedImg, setSelectedImg] = useState(null);
 
   useEffect(() => {
-
-    setProd(null)
-    const productpage = async () => {
-      try{
-        const res = await api.post(`/product/prod`, { productname })
-        const product = res.data.response[0];
-        setProd(product);
-      } catch {
-        console.log("big boy come fix up your code");
-      } 
+    const getProducts = async() => {
+        try {
+            const res = await api.get(`/api/products/${slug}`);
+            console.log(res.data)
+            setProd(res.data);
+        } catch (err) {
+            console.error('Error Fecthing Products')
+        }
     }
 
-    productpage();
-  }, [productname])  
+    getProducts();
+  }, [])  
   
+  useEffect(() => {
+    if (prod?.images?.length) {
+      setSelectedImg(prod.images[0].replace("/upload/","/upload/w_900,h_900,c_fill/"));
+    }
+  }, [prod]);
+  
+
   if (!prod) return <p>Loading...</p>;
 
   return (
@@ -31,9 +37,9 @@ export function ProductDetails(){
     <div className='w-full py-6 h-[100000px]'>
       <div>
         <div className='w-full grid grid-cols-1 px-6 md:grid-cols-2 md:px-12'>
-          <div className='w-full flex justify-center top-24 pb-5 h-min md:sticky md:pr-5'>
-            <ul className='min-w-10 pr-2'>
-              <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.image}></img></li>
+          {/* <div className='w-full flex justify-center top-24 pb-5 h-min md:sticky md:pr-5'> */}
+            {/* <ul className='min-w-10 pr-2'>
+              <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.images[0]}></img></li>
               <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.image}></img></li>
               <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.image}></img></li>
               <li className='aspect-square mb-1 object-contain object-center max-h-14'><img src={prod.image}></img></li>
@@ -41,8 +47,31 @@ export function ProductDetails(){
             </ul>
             <div id='mainImg' className='relative w-fit aspect-square min-w-64 max-w-md'>
                 <div className='absolute top-2 left-2 bg-white z-10 p-2 rounded-full'><FaHeart/></div>
-                <div className='sticky object-contain aspect-square'><img src={prod.image} className='sticky aspect-square '></img></div>
-            </div>
+                <div className='sticky object-contain aspect-square'><img src={prod.images[0]} className='sticky aspect-square '></img></div>
+            </div> */}
+            <div className='w-full flex justify-center top-24 h-min md:sticky md:pr-5'>
+
+  <ul className='min-w-10 pr-2'>
+    {prod?.images?.map((img,i)=>(
+      <li
+      key={i}
+      className='aspect-square mb-1 max-h-14 cursor-pointer'
+      onClick={()=>setSelectedImg(img)}
+      >
+        <img src={img} className='object-contain h-full w-full'/>
+      </li>
+    ))}
+  </ul>
+
+  <div className='relative w-full aspect-square min-w-64 max-w-md'>
+    <div className='absolute top-2 left-2 bg-white  p-2 rounded-full'>
+      <FaHeart/>
+    </div>
+
+    {selectedImg && <img src={selectedImg} className='object-contain aspect-square'/>}
+
+  </div>
+  {/* </div> */}
           </div>
           <div className='px-4'>
             <div className='mb-5 pb-3 border-b border-gray-400'>

@@ -1,31 +1,19 @@
 import { query } from "../config/db.js";
-
+import bcrypt from "bcrypt"
+ 
 export const getUsers = async() => {
     const {rows} = await query('SELECT * FROM users');
     return rows;
 }
 
-export const createUser = async(userData) => {
-
-    const { name, email } = userData;
-    const {rows} = await query
-    (
-        `INSERT INTO users (name, email)
-        VALUES ($1, $2) RETURNING *
-        `,
-        [name, email]
-    );
-    return rows[0];
-}
-
 export const updateUser = async(userData, userId) => {
 
-    const { name, email } = userData;
+    const { email, phone_no } = userData;
     const {rows} = await query
     (
-        `UPDATE users SET name = $1, email = $2
+        `UPDATE users SET email = $1, phone_no = $2
          WHERE id = $3 RETURNING *`,
-        [name, email, userId]
+        [email, phone_no, userId]
     );
     return rows[0];
 }
@@ -41,4 +29,75 @@ export const searchUser = async(searchTerm) => {
         [`%${searchTerm}%`]
     );
     return rows;
+}
+
+export const getAllProducts = async() => {
+    const { rows } = await query(
+        `SELECT * FROM products`
+    )
+
+    return rows;
+}
+
+export const getSingleProduct = async(slug) => {
+    const { rows } = await query(
+        `SELECT * FROM products WHERE slug = $1 LIMIT 1`,
+        [slug]
+    );
+
+    return rows[0];
+}
+
+export const addItem = async(cart_id, product_id) => {
+
+    const { rows } = await query(
+        `INSERT INTO cart_items (product_id, quantity, cart_id)
+        VALUES ($1, 1, $2) 
+        
+        ON CONFLICT (product_id, cart_id)
+
+        DO UPDATE SET quantity = cart_items.quantity + 1 
+        
+        RETURNING *`,
+        [product_id, cart_id]
+    );
+
+    return rows[0]
+}
+
+// export const deleteCart = async(cart_id) => {
+
+//     const { rows } = await query(
+//         `INSERT INTO cart_items (product_id, quantity, cart_id)
+//         VALUES ($1, 1, $2) 
+        
+//         ON CONFLICT (product_id, cart_id)
+
+//         DO UPDATE SET quantity = cart_items.quantity + 1 
+        
+//         RETURNING *`,
+//         [product_id, cart_id]
+//     );
+
+//     return rows[0]
+// }
+
+export const getUserCart = async(user_id) => {
+    const { rows } = await query(
+        `SELECT * FROM carts WHERE user_id = $1`,
+        [user_id]
+    );
+
+    if(rows.length === 0) {
+        const { newRow } = await query(
+            `INSERT INTO carts (user_id)
+            VALUES ($1) RETURNING *`,
+            [user_id]
+        );
+
+        return newRow[0];
+    }
+    else {
+        return rows[0];
+    }
 }

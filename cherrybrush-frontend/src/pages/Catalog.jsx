@@ -1,8 +1,6 @@
-import React from "react";
-import { ProductList } from "../components/ProductList";
+import { ProductList } from "../components/ProductList.jsx";
 
 export function Catalog(){
-
 
     /*<SortBy value={sortBy} onChange={setSortBy}/>*/
     return(
