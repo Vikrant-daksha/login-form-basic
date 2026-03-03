@@ -1,4 +1,10 @@
 /* CSS reset */
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap');
+
+@theme {
+  --font-josefin-sans: "Josefin Sans";
+}
+
 * {
   box-sizing: border-box;
 }
@@ -9,7 +15,7 @@ html, body {
 }
 
 body {
-  font-family: system-ui, sans-serif;
+  font-family: "Josefin Sans", Arial, Helvetica, sans-serif;
   background-color: #fff;
   color: #111;
 }

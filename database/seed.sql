@@ -47,3 +47,21 @@ VALUES (1, 3, 2),
 --@block
 SELECT * FROM carts INNER JOIN products ON carts.product_id = products.product_id;
 SELECT * FROM carts INNER JOIN users ON carts.user_id = users.id;
+
+
+SELECT 
+    pv.id,
+    p.product AS product,
+    c.color AS color,
+    s.size AS size,
+    sh.shape AS shape
+FROM product_variants AS pv
+INNER JOIN products AS p ON p.product_id = pv.product_id
+INNER JOIN colors AS c ON c.id = pv.color_id
+INNER JOIN sizes AS s ON s.id = pv.size_id
+INNER JOIN shapes AS sh ON sh.id = pv.shape_id;
+
+INSERT INTO product_variants (product_id, color_id, size_id, shape_id, stock, track_inventory)
+VALUES(40, 6, 7, 6, NULL, FALSE),
+(40, 6, 8, 6, NULL, FALSE),
+(40, 6, 9, 6, NULL, FALSE);

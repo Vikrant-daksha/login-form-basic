@@ -9,6 +9,8 @@ declare module "*.webp";
 
 interface ImportMetaEnv {
     readonly VITE_API_URL: string;
+    readonly VITE_CASHFREE_APP_ID: string;
+    readonly VITE_CASHFREE_SECRET_KEY: string;
   }
   
   interface ImportMeta {

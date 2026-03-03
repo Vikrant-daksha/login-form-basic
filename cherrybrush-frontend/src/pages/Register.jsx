@@ -76,7 +76,7 @@ export function Register(){
                             <LiaSignInAltSolid />
                         </div>
                         <div className="mb-6">
-                            <p className="flex items-center justify-center font-semibold text-2xl mb-1.5">Siging In</p>
+                            <p className="flex items-center justify-center font-semibold text-2xl mb-1.5">Register</p>
                             <p className="flex items-center justify-center text-sm text-gray-700">Please enter your details to sign in.</p>
                         </div>
                         <form onSubmit={submit}>
@@ -111,10 +111,10 @@ export function Register(){
                                 </span>
                             </div>
                             <div className="min-w-full min-h-11">
-                                <button className="border rounded-lg min-h-11 min-w-full bg-black text-white font-semibold" onClick = {submit}>Sign In</button>
+                                <button className="border rounded-lg min-h-11 min-w-full bg-black text-white font-semibold" onClick = {submit}>Register</button>
                             </div>
                             <div className="mt-4.5 flex items-center justify-center">
-                                <p className="justify-between">Already have an account? <Link to="/login" className="font-semibold">Login</Link></p> 
+                                <p className="justify-between">Already have an account? <Link to="/login" className="font-semibold hover:border-b-2 hover:border-black">Login</Link></p> 
                             </div>
                         </form>
                     </div>

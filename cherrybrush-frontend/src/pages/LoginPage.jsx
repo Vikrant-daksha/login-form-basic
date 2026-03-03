@@ -104,7 +104,7 @@ export function Login(){
                                 <button className="border rounded-lg min-h-11 min-w-full bg-black text-white font-semibold" onClick = {submit}>Login</button>
                             </div>
                             <div className="mt-4.5 flex items-center justify-center">
-                                <p className="justify-between">Don't have an account yet? <Link to="/register" className="font-semibold"> Sign Up</Link></p> 
+                                <p className="justify-between">Don't have an account yet? <Link to="/register" className="font-semibold hover:border-b-2 hover:border-black">Register</Link></p> 
                             </div>
                         </form>
                     </div>

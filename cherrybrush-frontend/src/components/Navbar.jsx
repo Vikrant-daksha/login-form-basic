@@ -108,7 +108,10 @@ export function Navbar(){
                     <Link to="/login" className="text-lg px-5">Login</Link>
                 )}
             </div>
+            <div className="flex items-center">
+                <Link to="/cart" className="sm:hidden mr-4 text-xl"><FaCartShopping></FaCartShopping></Link>
                 <button onClick={() => setIsOpen(!isOpen)} className="sm:hidden mr-4 text-2xl p-1.5"><GiHamburgerMenu /></button>
+            </div>
             </div>
             <div className={`${
             isOpen ? "translate-x-0" : "translate-x-full"
@@ -123,14 +126,12 @@ export function Navbar(){
                     <li className="px-5 py-2.5 border-b border-white">Custom</li>
                     <li className="px-5 py-2.5 border-b border-white">Nail Polish</li>
                     <li className="px-5 py-2.5 border-b border-white">Nail Care</li>
-                    <Link to="/cart">CART</Link>
                 </ul>
                 {user ? (
                     <>
-                    <div><Link to="/account" className="block text-xl py-1.5 px-5 border-b-1">Account</Link></div>
-                    <div className="flex justify-center pb-2">
-                        <Link to="/account" className="mr-0.5 p-0.5 border rounded-full"><User2/></Link>
-                        <button onClick={handleLogout} className="text-xs font-bold text-12 px-2.5 py-0.5 rounded-xl bg-red-500 text-white">Logout</button>
+                    <div><Link to="/account" className="flex items-center py-2.5 px-5 border-b border-white mb-4"><User2 className="mr-2 p-0.5 border border-black rounded-full"/>Account</Link></div>
+                    <div className="flex justify-start px-4">
+                        <button onClick={handleLogout} className="flex justify-center items-center-safe text-lg font-light text-12 px-2.5 py-0.5 rounded-xl bg-red-500 text-white"><LuLogOut className="mr-1"/>Logout</button>
                     </div>
                     </>
                 ) : (

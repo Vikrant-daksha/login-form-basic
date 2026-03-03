@@ -42,12 +42,13 @@ export function Account(){
 
     const handleUpdate = async() => {
         try{
-            const res = await api.put("/api/client/update", { email: nouse });
-            if (!res) {
-                console.log("Error fetching Account");
-                return;
-            }
-            setUserProfile(res.data);
+            console.log("Updated to:", nouse)
+            // const res = await api.put("/api/client/update", { email: nouse });
+            // if (!res) {
+            //     console.log("Error fetching Account");
+            //     return;
+            // }
+            // setUserProfile(res.data);
         } catch (err) {
             console.log("Error Getting User Profile", err)
         }
