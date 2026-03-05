@@ -27,12 +27,6 @@ CREATE TABLE IF NOT EXISTS products(
     product TEXT UNIQUE,
     description TEXT,
     price NUMERIC(10, 2),
-    product_types TEXT,
-    product_colors TEXT,
-    product_sizes TEXT,
-    FOREIGN KEY (product_colors) REFERENCES product_colors (id),
-    FOREIGN KEY (product_types) REFERENCES product_types (id),
-    FOREIGN KEY (product_sizes) REFERENCES product_sizes (id)
 );
 
 CREATE TABLE IF NOT EXISTS cart_items(
@@ -136,3 +130,14 @@ CREATE TABLE transactions (
 
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMPTZ
 );
+
+-- First drop the existing foreign key constraint
+--@block
+ALTER TABLE cart_items DROP CONSTRAINT cart_items_product_id_fkey;
+--@block
+-- Re-add it with ON DELETE CASCADE
+ALTER TABLE cart_items
+ADD CONSTRAINT cart_items_product_id_fkey
+FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE;
+
+-- Repeat for every table that references products

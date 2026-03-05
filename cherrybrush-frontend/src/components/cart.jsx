@@ -172,7 +172,16 @@ function Cart() {
             <div className="grid grid-cols-4 items-center px-1 py-1 w-full border border-solid rounded-xl">
               <div className="grid grid-cols-2 items-center">
                 <Link to={`/products/${elem?.slug}`}>
-                  <div className="rounded-xl p-0.5 border mr-1 sm:mr-3 w-fit">
+                  <div className="overflow-hidden rounded-xl p-0.5 border mr-1 sm:mr-3 w-fit">
+                    <div className="relative">
+                      {elem?.sale && (
+                        <div className="absolute top-0 left-0 bg-black overflow-hidden rounded-br-md">
+                          <div className="overflow-clip text-white text-center text-[10px] sm:text-xs px-0.5 py-0.5 sm:px-1 sm:py-0.5 ">
+                            S
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <img
                       src={
                         elem?.images?.[0]?.replace(
