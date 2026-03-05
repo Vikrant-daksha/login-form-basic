@@ -21,7 +21,7 @@ import { Catalog } from "./pages/Catalog";
 import SearchPage from "./pages/SearchPage";
 import Cart from "./components/cart";
 import Checkout from "./pages/Checkout.jsx";
-import OrderSuccess from "./pages/orderSuccess.jsx";
+import OrderSuccess from "./pages/OrderSuccess.jsx";
 
 function App() {
   const { user, loading } = useAuth();
