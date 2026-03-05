@@ -32,9 +32,9 @@ export function ProductList({ amt, layout, page = "" }) {
         if (!res.data) {
           return;
         } else {
-          const Lookup = res.data.reduce((acc, item) => {
-            acc[item.product_id] = parseInt(item.quantity);
-            return acc;
+          const Lookup = res.data.reduce((product, item) => {
+            product[item.product_id] = parseInt(item.quantity);
+            return product;
           }, {});
 
           setCart(Lookup);

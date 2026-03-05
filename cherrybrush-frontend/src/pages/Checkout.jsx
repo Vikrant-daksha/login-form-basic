@@ -14,13 +14,29 @@ function Checkout() {
   const navigate = useNavigate();
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [searchParams] = useSearchParams();
+  const [productData, setProductData] = useState(null);
 
   const fetchClientSecret = useCallback(async () => {
-    // Create a Checkout Session
-    const res = await api.get("api/auth/create-order");
+    try {
+      if (productData) {
+        const res = await api.post(
+          `/api/auth/buy-now/${productData.product_id}`,
+          {
+            cart: productData,
+          }
+        );
 
-    return res.data.clientSecret;
-  }, []);
+        return res.data.clientSecret;
+      } else {
+        const res = await api.get("api/auth/create-order");
+
+        return res.data.clientSecret;
+      }
+    } catch (err) {
+      console.error("Error", err);
+    }
+    // Create a Checkout Session
+  }, [productData]);
 
   const options = { fetchClientSecret };
 
@@ -78,6 +94,28 @@ function Checkout() {
       isCancelled = true;
     };
   }, [searchParams]);
+
+  useEffect(() => {
+    const buyNow = searchParams.get("productId");
+    if (!buyNow) {
+      return;
+    }
+
+    const getProduct = async () => {
+      try {
+        const res = await api.get(`/api/products/${buyNow}`);
+        setProductData(res.data.product);
+      } catch (err) {
+        console.error("Error Fecthing Products");
+      }
+    };
+
+    getProduct();
+  }, [searchParams]);
+
+  useEffect(() => {
+    console.log(productData);
+  }, [productData]);
 
   useEffect(() => {
     console.log(paymentStatus);
@@ -387,7 +425,6 @@ function Checkout() {
           )}
         </div>
       </div>
-      Hello
     </div>
   );
 }

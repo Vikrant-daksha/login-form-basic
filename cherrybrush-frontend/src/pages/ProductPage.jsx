@@ -1,15 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/axiosinstance";
 import { FaHeart } from "react-icons/fa";
+import { TbTrash } from "react-icons/tb";
 
 export function ProductDetails() {
   const { slug } = useParams(); // Access the dynamic parameter
   const [prod, setProd] = useState(null);
   const [variants, setVariants] = useState([]);
   const [selectedImg, setSelectedImg] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [productQuantity, setProductQuantity] = useState(0);
+  const navigate = useNavigate();
 
   const SORT_SIZE = ["XS", "S", "M", "L", "XL", "XXL", "CUSTOM"];
+
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const res = await api.get("/api/auth/cart");
+        if (!res.data) {
+          return;
+        } else {
+          setCart(res.data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchCart();
+  }, []);
 
   useEffect(() => {
     const getProducts = async () => {
@@ -35,8 +56,8 @@ export function ProductDetails() {
   }, [prod]);
 
   useEffect(() => {
-    console.log("Backend", variants);
-  }, [variants]);
+    console.log("Backend", prod);
+  }, [prod]);
 
   const colors = [...new Set(variants?.map((v) => v.color))];
   const sizes = [...new Set(variants?.map((v) => v.size))];
@@ -45,6 +66,43 @@ export function ProductDetails() {
   const sortSize = sizes.sort(
     (a, b) => SORT_SIZE.indexOf(a) - SORT_SIZE.indexOf(b)
   );
+
+  const handleCheckout = async () => {
+    navigate(`${import.meta.env.VITE_PORT}/checkout?productId=${slug}`);
+  };
+
+  useEffect(() => {
+    if (cart) {
+      const product = cart?.find((c) => c.product_id === prod?.product_id);
+      if (product) {
+        const { quantity } = product;
+        setProductQuantity(quantity);
+      }
+    }
+  }, [cart]);
+
+  const removeFromCart = async (productId) => {
+    const res = await api.delete(`/api/remove/${productId}`);
+
+    setCart((cart) => cart.filter((item) => item.product_id !== productId));
+    setProductQuantity(0);
+
+    console.log(res.data);
+  };
+
+  const handleLocalChange = () => {
+    setProductQuantity((pq) => Number(pq) + 1);
+  };
+
+  const addToCart = async (productId) => {
+    try {
+      const productItem = { product_id: productId, quantity: 1 };
+      const res = await api.post("/api/add-to-cart/", productItem);
+      console.log(res.data);
+    } catch (err) {
+      console.error("error", err);
+    }
+  };
 
   if (!prod) return <p>Loading...</p>;
 
@@ -94,11 +152,11 @@ export function ProductDetails() {
                   </button>
                 ))}
               </div>
-              <div className="my-3">
+              <div className="grid grid-cols-5 gap-3 my-3">
                 {colors?.map((c) => (
                   <div
                     key={c}
-                    className={`flex w-1/5 border-2 border-${c.toLowerCase()}-500`}
+                    className={`flex w-full border-2 border-${c.toLowerCase()}-500`}
                   >
                     <div
                       className={`w-5 h-5 rounded-full bg-${c.toLowerCase()}-500 mr-1`}
@@ -108,19 +166,69 @@ export function ProductDetails() {
                 ))}
               </div>
               <div className="mb-4">
-                {shapes?.map((sh) => (
-                  <select className="p-2 border">
-                    <option>{sh}</option>
-                  </select>
-                ))}
+                <select className="p-2 border">
+                  {shapes?.map((sh) => (
+                    <option key={sh}>{sh}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <button className="w-full text-sm py-3 bg-black text-white font-semibold tracking-[0.5rem] mb-2">
-                  ADD TO CART
-                </button>
+                <div
+                  className={
+                    productQuantity > 0
+                      ? "grid grid-cols-[2fr_1fr] gap-3 w-full mb-2"
+                      : `grid grid-cols-1 mb-2`
+                  }
+                >
+                  <div className="w-full">
+                    {productQuantity > 0 ? (
+                      <button
+                        onClick={() => {
+                          addToCart(prod?.product_id);
+                          handleLocalChange();
+                        }}
+                        className="w-full h-full text-sm py-3 bg-black text-white font-semibold tracking-[0.5rem]"
+                      >
+                        {productQuantity}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          addToCart(prod?.product_id);
+                          handleLocalChange();
+                        }}
+                        className="w-full h-full text-sm py-3 bg-black text-white font-semibold tracking-[0.5rem]"
+                      >
+                        ADD TO CART
+                      </button>
+                    )}
+                  </div>
+                  {productQuantity > 0 && (
+                    <div className="w-full">
+                      <button
+                        onClick={() => removeFromCart(Number(prod?.product_id))}
+                        className="border w-full h-full flex justify-center items-center text-center text-red-600"
+                      >
+                        <TbTrash className="mr-3" />
+                        <div className="flex justify-center items-center">
+                          Remove
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="w-full mb-3">
+                  <button
+                    onClick={() => handleCheckout(prod.product_id)}
+                    className="w-full border py-3"
+                  >
+                    Buy Now
+                  </button>
+                </div>
                 <p className="text-[12px] font-light mb-6">
                   Free shipping on order above 2000/-
                 </p>
+                <p className="text-sm font-medium mb-5">{prod?.description}</p>
                 <p className="text-[12px] font-light">
                   Punch up your look with This set, a white design on a nude
                   base and chrome finish, elevated with a long length.

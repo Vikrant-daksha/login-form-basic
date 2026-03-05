@@ -86,7 +86,7 @@ export default function SortableUploader({ files, setFiles }) {
       <div
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
-        className="border-2 border-dashed p-10 mx-7 mb-5 text-center rounded-2xl text-gray-400"
+        className="border-2 border-dashed p-10 mb-5 text-center rounded-2xl text-gray-400"
       >
         Drag images here
       </div>
