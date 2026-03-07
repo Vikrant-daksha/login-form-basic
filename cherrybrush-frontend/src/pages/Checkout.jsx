@@ -15,20 +15,26 @@ function Checkout() {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [searchParams] = useSearchParams();
   const [productData, setProductData] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
 
   const fetchClientSecret = useCallback(async () => {
     try {
       if (productData) {
-        const res = await api.post(
-          `/api/auth/buy-now/${productData.product_id}`,
-          {
+        let res;
+        if (!selectedVariant) {
+          res = await api.post(`/api/auth/buy-now/${productData.product_id}`, {
             cart: productData,
-          }
-        );
+          });
+        } else if (productData && selectedVariant) {
+          res = await api.post(`/api/auth/buy-now/${productData.product_id}`, {
+            cart: productData,
+            variant: selectedVariant[0],
+          });
+        }
 
         return res.data.clientSecret;
       } else {
-        const res = await api.get("api/auth/create-order");
+        const res = await api.get("api/auth/create-checkout");
 
         return res.data.clientSecret;
       }
@@ -97,14 +103,27 @@ function Checkout() {
 
   useEffect(() => {
     const buyNow = searchParams.get("productId");
+    const variantId = searchParams.get("variantId");
     if (!buyNow) {
       return;
     }
+
+    console.log(variantId);
 
     const getProduct = async () => {
       try {
         const res = await api.get(`/api/products/${buyNow}`);
         setProductData(res.data.product);
+        const findVariant = res.data.variant;
+        setSelectedVariant(
+          findVariant
+            .map((fv) => {
+              if (fv.id === Number(variantId)) {
+                return fv;
+              }
+            })
+            .filter((fv) => fv !== undefined)
+        );
       } catch (err) {
         console.error("Error Fecthing Products");
       }
@@ -132,7 +151,7 @@ function Checkout() {
 
   // async function payWithStripe() {
   //   try {
-  //     const res = await api.get("/api/auth/create-order");
+  //     const res = await api.get("/api/auth/create-checkout");
 
   //     console.log("Resdata", res.data);
 

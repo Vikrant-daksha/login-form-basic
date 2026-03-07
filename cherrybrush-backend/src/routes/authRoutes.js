@@ -3,7 +3,6 @@ import * as authController from "../controllers/authControllers.js";
 import * as authMiddleware from "../middleware/authMiddleware.js";
 import * as adminMiddleware from "../middleware/adminMiddleware.js";
 import * as uploadMiddleware from "../middleware/uploadMiddleware.js";
-import { createCheckoutSession } from "../config/stripe.js";
 
 const router = express.Router();
 
@@ -24,7 +23,7 @@ router.post(
 );
 
 router.get(
-  "/create-order",
+  "/create-checkout",
   authMiddleware.loginRequire,
   authController.createCheckoutSession
 );
@@ -49,5 +48,23 @@ router.post(
 );
 
 router.get("/product/variants", authController.getVariants);
+
+router.post(
+  "/create-order",
+  authMiddleware.loginRequire,
+  authController.createOrder
+);
+
+router.get(
+  "/order-history",
+  authMiddleware.loginRequire,
+  authController.fetchOrders
+);
+
+router.get(
+  "/order-history/:orderId",
+  authMiddleware.loginRequire,
+  authController.getOrderById
+);
 
 export default router;

@@ -131,6 +131,16 @@ export function Product() {
     console.log(res.data);
   };
 
+  useEffect(() => {
+    const justToAwait = async () => {
+      const res = await api.post("/api/auth/create-order");
+
+      console.log(res.data);
+    };
+
+    justToAwait();
+  }, []);
+
   const submit = async () => {
     try {
       if (!product || !desc || !amount) {
@@ -466,7 +476,10 @@ export function Product() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => addVariant(productId)}
+                  onClick={() => {
+                    addVariant(productId);
+                    setAddVariantPopUp(false);
+                  }}
                   className="w-full border border-black py-1.5 rounded-lg"
                 >
                   Add Variant

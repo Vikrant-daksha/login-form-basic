@@ -32,7 +32,7 @@ export function Home() {
         className="w-flex flex-col h-auto px-3 overflow-x-scroll overflow-auto scrollbar-hide md:mx-40"
       >
         <Carousel speed={0.5}>
-          <ProductList amt={28} layout={"flex"} />
+          <ProductList amt={0} layout={"flex"} />
         </Carousel>
       </div>
       <div id="Comments" className="mt-16 mb-12 px-6">

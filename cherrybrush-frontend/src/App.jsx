@@ -22,6 +22,7 @@ import SearchPage from "./pages/SearchPage";
 import Cart from "./components/cart";
 import Checkout from "./pages/Checkout.jsx";
 import OrderSuccess from "./pages/OrderSuccess.jsx";
+import OrderHistory from "./pages/OrderHistory.jsx";
 
 function App() {
   const { user, loading } = useAuth();
@@ -52,6 +53,7 @@ function App() {
           <Route path="/products/:slug" element={<ProductDetails />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/checkout/success" element={<OrderSuccess />} />
+          <Route path="/order-history" element={<OrderHistory />} />
         </Route>
       </Routes>
     </>

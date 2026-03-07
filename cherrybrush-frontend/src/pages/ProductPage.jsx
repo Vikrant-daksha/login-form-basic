@@ -11,6 +11,11 @@ export function ProductDetails() {
   const [selectedImg, setSelectedImg] = useState(null);
   const [cart, setCart] = useState([]);
   const [productQuantity, setProductQuantity] = useState(0);
+
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedShape, setSelectedShape] = useState(null);
+  const [seletedVariant, setSelectedVariant] = useState(null);
   const navigate = useNavigate();
 
   const SORT_SIZE = ["XS", "S", "M", "L", "XL", "XXL", "CUSTOM"];
@@ -67,8 +72,35 @@ export function ProductDetails() {
     (a, b) => SORT_SIZE.indexOf(a) - SORT_SIZE.indexOf(b)
   );
 
+  const finalVariant = (value) => {
+    if (selectedColor && selectedSize) {
+      const finalVariant = variants
+        .map((v) => {
+          const size = v.size;
+          const shape = v.shape;
+          const color = v.color;
+
+          if (
+            shape === value &&
+            size === selectedSize &&
+            color === selectedColor
+          ) {
+            return v;
+          }
+        })
+        .filter((v) => v !== undefined);
+      console.log(finalVariant);
+      setSelectedVariant(finalVariant);
+    }
+  };
+
   const handleCheckout = async () => {
-    navigate(`${import.meta.env.VITE_PORT}/checkout?productId=${slug}`);
+    if (seletedVariant) {
+      const variantId = seletedVariant.map((v) => v.id);
+      navigate(`/checkout?productId=${slug}&variantId=${variantId[0]}`);
+    } else {
+      navigate(`/checkout?productId=${slug}`);
+    }
   };
 
   useEffect(() => {
@@ -87,7 +119,7 @@ export function ProductDetails() {
     setCart((cart) => cart.filter((item) => item.product_id !== productId));
     setProductQuantity(0);
 
-    console.log(res.data);
+    console.log(shapes);
   };
 
   const handleLocalChange = () => {
@@ -96,7 +128,16 @@ export function ProductDetails() {
 
   const addToCart = async (productId) => {
     try {
-      const productItem = { product_id: productId, quantity: 1 };
+      let productItem = {
+        product_id: productId,
+      };
+      if (seletedVariant) {
+        const id = seletedVariant.map((v) => v.id);
+        productItem = {
+          product_id: productId,
+          product_variant_id: id[0],
+        };
+      }
       const res = await api.post("/api/add-to-cart/", productItem);
       console.log(res.data);
     } catch (err) {
@@ -137,7 +178,7 @@ export function ProductDetails() {
                 )}
               </div>
             </div>
-            <div className="px-4">
+            <div className="px-4 mr-auto">
               <div className="mb-5 pb-3 border-b border-gray-400">
                 <h1 className="uppercase text-[20px] pb-2">{prod.product}</h1>
                 <div className="py-1 hidden">Tags</div>
@@ -145,33 +186,69 @@ export function ProductDetails() {
                   Price: <span className="">₹ {prod.price}</span>
                 </p>
               </div>
-              <div className="w-1/2 flex justify-between">
-                {sortSize?.map((s) => (
-                  <button key={s} className="border px-2 mr-3 border-black">
-                    {s}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-5 gap-3 my-3">
-                {colors?.map((c) => (
-                  <div
-                    key={c}
-                    className={`flex w-full border-2 border-${c.toLowerCase()}-500`}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded-full bg-${c.toLowerCase()}-500 mr-1`}
-                    ></div>
-                    {c}
+              {variants && (
+                <>
+                  <div className="w-1/2 flex justify-between">
+                    {sortSize?.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => {
+                          setSelectedSize(s);
+                        }}
+                        className={
+                          selectedSize === s
+                            ? "border px-2 mr-3 border-black bg-gray-200"
+                            : "border px-2 mr-3 border-black"
+                        }
+                      >
+                        {s}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="mb-4">
-                <select className="p-2 border">
-                  {shapes?.map((sh) => (
-                    <option key={sh}>{sh}</option>
-                  ))}
-                </select>
-              </div>
+                  <div className="grid grid-cols-5 gap-3 my-3">
+                    {colors?.map((c) => (
+                      <div
+                        key={c}
+                        onClick={() => {
+                          setSelectedColor(c);
+                        }}
+                        className={`flex w-full border-2 border-${c.toLowerCase()}-500`}
+                      >
+                        <div
+                          className={
+                            selectedColor === c
+                              ? `w-5 h-5 rounded-full bg-gray-200`
+                              : `w-5 h-5 rounded-full bg-${c.toLowerCase()}-500 mr-1`
+                          }
+                        ></div>
+                        {c}
+                      </div>
+                    ))}
+                  </div>
+                  {shapes.length !== 0 && (
+                    <div className="mb-4">
+                      <select
+                        className="p-2 border"
+                        value={selectedShape}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setSelectedShape(value);
+                          finalVariant(value);
+                        }}
+                      >
+                        <option value={""} disabled selected>
+                          --select-shape--
+                        </option>
+                        {shapes?.map((sh) => (
+                          <option key={sh} value={sh}>
+                            {sh}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </>
+              )}
               <div>
                 <div
                   className={
@@ -219,7 +296,7 @@ export function ProductDetails() {
                 </div>
                 <div className="w-full mb-3">
                   <button
-                    onClick={() => handleCheckout(prod.product_id)}
+                    onClick={() => handleCheckout()}
                     className="w-full border py-3"
                   >
                     Buy Now

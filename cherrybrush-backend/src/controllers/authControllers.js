@@ -73,9 +73,13 @@ export const cart = async (req, res) => {
   try {
     const user = req.id;
     const cartItem = await authService.fetchCart(user);
+    // const { product_variant_id } = cartItem;
+    // if (product_variant_id !== null) {
+    //   console.log(product_variant_id);
+    // }
     res.status(200).json(cartItem);
   } catch (err) {
-    console.error("Cannot Show Cart");
+    console.error("Cannot Show Cart", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -155,8 +159,8 @@ export const createCheckoutSession = async (req, res) => {
 export const buyNow = async (req, res) => {
   try {
     const user = req.id;
-    const { cart } = req.body;
-    const session = await authService.buyNowSession(cart);
+    const { cart, variant } = req.body;
+    const session = await authService.buyNowSession(cart, variant);
 
     res.json({ clientSecret: session.client_secret });
   } catch (err) {
@@ -202,6 +206,61 @@ export const addProductVariant = async (req, res) => {
     res.status(200).json(variant);
   } catch (err) {
     console.error("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const createOrder = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const cart = await authService.fetchCart(user_id);
+
+    // const order = await authService.createOrder(
+    //   user_id,
+    //   4000,
+    //   "pending",
+    //   "stripe"
+    // );
+
+    // const orderItems = await authService.orderItems(2, cart[0].cart_id);
+
+    // const { color, size, shape, stock, trackInventory } = req.body;
+    // const variant = await authService.addProductVariant(
+    //   productId,
+    //   color,
+    //   size,
+    //   shape,
+    //   stock,
+    //   trackInventory
+    // );
+    res.status(200).json(orderItems);
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const fetchOrders = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const orders = await authService.orderHistory(user_id);
+
+    res.status(200).json(orders);
+  } catch (err) {
+    console.log("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const getOrderById = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const { orderId } = req.params;
+    const order = await authService.orderByOrderId(user_id, orderId);
+
+    res.status(200).json(order);
+  } catch (err) {
+    console.log("Error", err);
     res.status(500).json("Internal Server Error");
   }
 };

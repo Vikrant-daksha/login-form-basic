@@ -81,17 +81,58 @@ export const loginUser = async (userData) => {
 
 export const fetchCart = async (user_id) => {
   const { rows } = await query(
-    `SELECT * FROM carts c
-        JOIN cart_items ci 
-        ON c.cart_id = ci.cart_id
-        JOIN products pi 
-        ON ci.product_id = pi.product_id 
-        WHERE c.user_id = $1`,
+    `SELECT 
+        ci.cart_items_id,
+        ci.quantity,
+        pi.product_id,               -- Explicitly take it from the products table
+        pi.product AS product,          -- Rename columns to be cleaner for frontend
+        pi.price AS price,
+        pi.images AS images,
+        pi.sale AS sale,
+        pv.id AS variant_id,
+        cs.color AS color,
+        sz.size AS size,
+        sh.shape AS shape,
+        c.cart_id AS cart_id 
+    FROM carts c
+    JOIN cart_items ci ON c.cart_id = ci.cart_id
+    JOIN products pi ON ci.product_id = pi.product_id
+    LEFT JOIN product_variants pv ON ci.product_variant_id = pv.id
+    LEFT JOIN colors cs ON pv.color_id = cs.id
+    LEFT JOIN shapes sh ON pv.shape_id = sh.id
+    LEFT JOIN sizes sz ON pv.size_id = sz.id
+    WHERE c.user_id = $1`,
     [user_id]
   );
 
   return rows;
 };
+
+// export const fetchCart = async (user_id) => {
+//   const { rows } = await query(
+//     `SELECT
+//       ci.cart_items_id,
+//       ci.quantity,
+//       p.product_id,
+//       p.product AS product,
+//       p.price AS price,
+//       pv.id AS variant_id,
+//       cs.color AS variant_color,
+//       sz.size AS variant_size,
+//       sh.shape AS variant_shape
+//     FROM carts c
+//     JOIN cart_items ci ON c.cart_id = ci.cart_id
+//     JOIN products p ON ci.product_id = p.product_id
+//     LEFT JOIN product_variants pv ON ci.product_variants_id = pv.id
+//     LEFT JOIN colors cs ON pv.color_id = cs.id
+//     LEFT JOIN sizes sz ON pv.size_id = sz.id
+//     LEFT JOIN shapes sh ON pv.shape_id = sh.id
+//     WHERE c.user_id = $1`,
+//     [user_id]
+//   );
+
+//   return rows;
+// };
 
 export const createUser = async (userData) => {
   if (!userData) {
@@ -191,7 +232,9 @@ export const uploadCloudinary = async (filesArray, imgName) => {
 export const createSession = async (cartItem) => {
   const lineItems = await cartItem
     .filter(
-      (item) => item.product && item.price && item.quantity > 0 && item.images
+      (item) =>
+        (item.product && item.price && item.quantity > 0 && item.images) ||
+        item.variant_id
     )
     .map((item) => ({
       price_data: {
@@ -199,6 +242,9 @@ export const createSession = async (cartItem) => {
         product_data: {
           name: item.product,
           images: [Object.values(item.images)[0]],
+          description: item.variant_id
+            ? `${item.size}, ${item.color}, ${item.shape}`
+            : [],
         },
         unit_amount: item.price * 100, // convert ₹ to paise
       },
@@ -216,18 +262,12 @@ export const createSession = async (cartItem) => {
   return session;
 };
 
-export const buyNowSession = async (cartItem) => {
-  // const lineItems = {
-  //   price_data: {
-  //     currency: "inr",
-  //     product_data: {
-  //       name: cartItem.product,
-  //       images: [Object.values(cartItem.images)[0]],
-  //     },
-  //     unit_amount: cartItem.price * 100, // convert ₹ to paise
-  //   },
-  //   quantity: cartItem.quantity,
-  // };
+export const buyNowSession = async (cartItem, variant) => {
+  let lineItems;
+
+  if (variant) {
+    lineItems = `${variant.size}, ${variant.color}, ${variant.shape}`;
+  }
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
@@ -240,6 +280,7 @@ export const buyNowSession = async (cartItem) => {
           product_data: {
             name: cartItem.product,
             images: [Object.values(cartItem.images)[0]],
+            description: lineItems || [],
           },
           unit_amount: cartItem.price * 100,
         },
@@ -306,6 +347,88 @@ export const addProductColor = async (color) => {
   return rows;
 };
 
-export const fetchToken = async () => {};
+export const createOrder = async (user_id, amount, status, payment_method) => {
+  const { rows } = await query(
+    `
+    INSERT INTO orders(user_id, total_amount, status, payment_method, created_at)
+    VALUES($1, $2, $3, $4, NOW()) RETURNING *
+    `,
+    [user_id, amount, status, payment_method]
+  );
 
-export const login = async () => {};
+  return rows;
+};
+
+export const orderItems = async (order_id, cart_id) => {
+  const { rows } = await query(
+    `INSERT INTO order_items (
+      order_id, 
+      product_id, 
+      variant_id, 
+      product_name, 
+      variant_color, 
+      variant_size,
+      variant_shape,
+      quantity, 
+      price_at_purchase
+    )
+    SELECT 
+      $1,                -- Your new order_id
+      ci.product_id, 
+      ci.product_variant_id, 
+      p.product,         -- The snapshot name
+      col.color,         -- The snapshot color
+      sz.size,           -- The snapshot size
+      sh.shape,
+      ci.quantity, 
+      p.price            -- The snapshot price (CRITICAL!)
+    FROM cart_items ci
+    JOIN products p ON ci.product_id = p.product_id
+    LEFT JOIN product_variants pv ON ci.product_variant_id = pv.id
+    LEFT JOIN colors col ON pv.color_id = col.id
+    LEFT JOIN sizes sz ON pv.size_id = sz.id
+    LEFT JOIN shapes sh ON pv.shape_id = sh.id
+    WHERE ci.cart_id = $2;
+`,
+    [order_id, cart_id]
+  );
+
+  return rows;
+};
+
+export const orderByOrderId = async (user_id, order_id) => {
+  const { rows } = await query(
+    `
+    SELECT
+      odr.id AS order_id,
+      odr.total_amount AS total_amount,
+      odr.status AS payment_status,
+      odr.payment_method AS payment_method,
+      odr.created_at AS order_date,
+      oi.product_id AS product_id,
+      oi.quantity AS quantity,
+      oi.price_at_purchase AS price,
+      oi.product_name AS name, 
+      oi.variant_color AS color,
+      oi.variant_size AS size,
+      oi.variant_shape AS shape
+    FROM orders odr
+    JOIN order_items oi ON odr.id = oi.order_id
+    WHERE odr.id = $1 AND odr.user_id = $2 
+    `,
+    [order_id, user_id]
+  );
+
+  return rows;
+};
+
+export const orderHistory = async (user_id) => {
+  const { rows } = await query(
+    `
+    SELECT * FROM orders WHERE user_id = $1
+    `,
+    [user_id]
+  );
+
+  return rows;
+};
