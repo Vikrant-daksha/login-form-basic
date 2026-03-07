@@ -141,3 +141,25 @@ ADD CONSTRAINT cart_items_product_id_fkey
 FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE;
 
 -- Repeat for every table that references products
+
+
+CREATE TABLE orders (
+	id SERIAL PRIMARY KEY,
+	user_id INT REFERENCES users(id) NOT NULL,
+	total_amount BIGINT NOT NULL,
+	status VARCHAR(50) NOT NULL,
+	payment_method VARCHAR(50),
+	created_at TIMESTAMPTZ
+)
+
+CREATE TABLE order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(id) ON DELETE CASCADE,
+    product_id INT,
+    variant_id INT,
+    product_name VARCHAR(255) NOT NULL, 
+    variant_color VARCHAR(50), 
+    variant_size VARCHAR(50),
+    quantity INT NOT NULL,
+    price_at_purchase BIGINT NOT NULL
+);

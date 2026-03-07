@@ -1,9 +1,6 @@
 import express from "express";
 import * as clientController from "../controllers/clientController.js";
 import * as authMiddleware from "../middleware/authMiddleware.js";
-import * as adminMiddleware from "../middleware/adminMiddleware.js";
-import cashfreeOrder from "../config/cashfree.js";
-import { createCheckoutSession } from "../config/stripe.js";
 
 const router = express.Router();
 

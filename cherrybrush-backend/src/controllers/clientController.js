@@ -88,11 +88,20 @@ export const getProductBySlug = async (req, res) => {
 
 export const addToCart = async (req, res) => {
   try {
-    const { product_id } = req.body;
+    const { product_id, product_variant_id } = req.body;
     const user_id = req.id;
     const userCart = await clientService.getUserCart(user_id);
     const { cart_id } = userCart;
-    const addItem = await clientService.addItem(cart_id, product_id);
+    let addItem;
+    if (!product_variant_id) {
+      addItem = await clientService.addItem(cart_id, product_id);
+    } else {
+      addItem = await clientService.addItem(
+        cart_id,
+        product_id,
+        product_variant_id
+      );
+    }
     res.status(200).json(addItem);
   } catch (err) {
     console.error("Error Cannot get Products", err);
@@ -103,12 +112,13 @@ export const addToCart = async (req, res) => {
 export const updateQuantity = async (req, res) => {
   try {
     const user_id = req.id;
-    const { productId, quantity } = req.body;
+    const { productId, product_variant_id, quantity } = req.body;
     const userCart = await clientService.getUserCart(user_id);
     const { cart_id } = userCart;
     const newQuantity = await clientService.updateQuantity(
       cart_id,
       productId,
+      product_variant_id,
       quantity
     );
     res.status(200).json(newQuantity);
@@ -122,7 +132,7 @@ export const removeFromCart = async (req, res) => {
   try {
     const user_id = req.id;
     const { productId } = req.params;
-    const newCart = await clientService.cartItemRemove(user_id, productId);
+    const newCart = await clientService.cartVariantRemove(user_id, productId);
     res.status(200).json(newCart);
   } catch (err) {
     console.error("Error Updating Quantity", err);

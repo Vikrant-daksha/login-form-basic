@@ -12,18 +12,29 @@ export function ProductList({ amt, layout, page = "" }) {
   const [pageName, setPageName] = useState("");
   const [sortBy, setSortBy] = useState("");
 
-  async function addToCart(productId) {
+  const addToCart = async (productId) => {
     try {
-      const productItem = { product_id: productId, quantity: 1 };
+      const productItem = {
+        product_id: productId,
+      };
       const res = await api.post("/api/add-to-cart/", productItem);
       setCart((prev) => ({
         ...prev,
         [productItem.product_id]: parseInt(res.data.quantity),
       }));
+      console.log(res.data);
     } catch (err) {
       console.error("error", err);
     }
-  }
+  };
+  // async function addToCart(productId) {
+  //   try {
+  //     const productItem = { product_id: productId, quantity: 1 };
+  //     const res = await api.post("/api/add-to-cart/", productItem);
+  //   } catch (err) {
+  //     console.error("error", err);
+  //   }
+  // }
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -107,7 +118,7 @@ export function ProductList({ amt, layout, page = "" }) {
           {itemsToRender.map((product) => (
             <div
               key={product?.product_id}
-              className="min-w-[35%] md:min-w-[25%] lg:min-w-[20%] w-full border mr-2.5 "
+              className="min-w-[20%] md:min-w-[25%] lg:min-w-[20%] w-full border mr-2.5 "
             >
               <Link to={`/products/${product?.slug}`}>
                 <div className="relative">
@@ -115,11 +126,11 @@ export function ProductList({ amt, layout, page = "" }) {
                     src={
                       product?.images?.[0]?.replace(
                         "/upload/",
-                        "/upload/w_300,h_300,c_fill/"
+                        "/upload/w_400,h_400,c_fill/"
                       ) || logo
                     }
-                    width={300}
-                    height={300}
+                    width={400}
+                    height={400}
                   ></img>
                   {product.sale && (
                     <span className="absolute top-0 right-0 bg-black py-1 px-2 text-sm text-white">
