@@ -215,3 +215,31 @@ export const cartItemRemove = async (
 
   return rows;
 };
+
+export const getProductByCartItemsId = async (cart_id, cart_items_id) => {
+  const { rows } = await query(
+    `
+    SELECT
+      ci.product_id AS product_id,
+      ci.cart_id AS cart_id,
+      ci.product_variant_id AS variant,
+      ci.quantity AS quantity,
+      pi.product AS name,
+      pi.price AS price,
+      pi.sale AS sale,
+      pi.images AS images,
+      cs.color AS color,
+      sz.size AS size,
+      sh.shape AS shape
+    FROM cart_items ci 
+    JOIN products pi ON ci.product_id = pi.product_id
+    LEFT JOIN product_variants pv ON ci.product_variant_id = pv.id
+    LEFT JOIN colors cs ON pv.color_id = cs.id
+    LEFT JOIN shapes sh ON pv.shape_id = sh.id
+    LEFT JOIN sizes sz ON pv.size_id = sz.id
+    WHERE cart_id = $1 AND cart_items_id = $2`,
+    [cart_id, cart_items_id]
+  );
+
+  return rows;
+};

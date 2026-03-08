@@ -67,4 +67,16 @@ router.get(
   authController.getOrderById
 );
 
+router.post(
+  "/add-address",
+  authMiddleware.loginRequire,
+  authController.createAddress
+);
+
+router.get(
+  "/get-user-address",
+  authMiddleware.loginRequire,
+  authController.getUserAddress
+);
+
 export default router;

@@ -159,8 +159,8 @@ export const createCheckoutSession = async (req, res) => {
 export const buyNow = async (req, res) => {
   try {
     const user = req.id;
-    const { cart, variant } = req.body;
-    const session = await authService.buyNowSession(cart, variant);
+    const { cart } = req.body;
+    const session = await authService.buyNowSession(cart);
 
     res.json({ clientSecret: session.client_secret });
   } catch (err) {
@@ -213,13 +213,15 @@ export const addProductVariant = async (req, res) => {
 export const createOrder = async (req, res) => {
   try {
     const user_id = req.id;
+    const address_id = req.body;
     const cart = await authService.fetchCart(user_id);
 
     // const order = await authService.createOrder(
     //   user_id,
     //   4000,
     //   "pending",
-    //   "stripe"
+    //   "stripe",
+    //   address_id
     // );
 
     // const orderItems = await authService.orderItems(2, cart[0].cart_id);
@@ -233,7 +235,7 @@ export const createOrder = async (req, res) => {
     //   stock,
     //   trackInventory
     // );
-    res.status(200).json(orderItems);
+    res.status(200).json(address_id);
   } catch (err) {
     console.error("Error", err);
     res.status(500).json("Internal Server Error");
@@ -259,6 +261,29 @@ export const getOrderById = async (req, res) => {
     const order = await authService.orderByOrderId(user_id, orderId);
 
     res.status(200).json(order);
+  } catch (err) {
+    console.log("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const createAddress = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const addressData = req.body;
+    const address = await authService.createAddress(user_id, addressData);
+    res.status(200).json(address);
+  } catch (err) {
+    console.log("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const getUserAddress = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const usersAddress = await authService.getUserAddress(user_id);
+    res.status(200).json(usersAddress);
   } catch (err) {
     console.log("Error", err);
     res.status(500).json("Internal Server Error");

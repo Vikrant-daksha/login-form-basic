@@ -10,6 +10,12 @@ router.get("/products", clientController.productsList);
 
 router.get("/products/:slug", clientController.getProductBySlug);
 
+router.get(
+  "/products/cart-item/:cart_items_id",
+  authMiddleware.loginRequire,
+  clientController.getProductByCartItemsId
+);
+
 router.put(
   "/client/update",
   authMiddleware.loginRequire,

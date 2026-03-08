@@ -86,6 +86,23 @@ export const getProductBySlug = async (req, res) => {
   }
 };
 
+export const getProductByCartItemsId = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const { cart_items_id } = req.params;
+    const userCart = await clientService.getUserCart(user_id);
+    const { cart_id } = userCart;
+    const cartItem = await clientService.getProductByCartItemsId(
+      cart_id,
+      cart_items_id
+    );
+    res.status(200).json(cartItem);
+  } catch (err) {
+    console.error("Error Cannot get Products", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 export const addToCart = async (req, res) => {
   try {
     const { product_id, product_variant_id } = req.body;

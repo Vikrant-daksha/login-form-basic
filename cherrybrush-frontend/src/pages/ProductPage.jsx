@@ -14,8 +14,9 @@ export function ProductDetails() {
 
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
-  const [selectedShape, setSelectedShape] = useState(null);
+  const [selectedShape, setSelectedShape] = useState("");
   const [seletedVariant, setSelectedVariant] = useState(null);
+  const [cartItemsId, setCartItemsId] = useState(null);
   const navigate = useNavigate();
 
   const SORT_SIZE = ["XS", "S", "M", "L", "XL", "XXL", "CUSTOM"];
@@ -95,11 +96,10 @@ export function ProductDetails() {
   };
 
   const handleCheckout = async () => {
-    if (seletedVariant) {
-      const variantId = seletedVariant.map((v) => v.id);
-      navigate(`/checkout?productId=${slug}&variantId=${variantId[0]}`);
+    if (!cartItemsId) {
+      alert("Add To Cart First!!!");
     } else {
-      navigate(`/checkout?productId=${slug}`);
+      navigate(`/checkout?productId=${cartItemsId}`);
     }
   };
 
@@ -114,12 +114,14 @@ export function ProductDetails() {
   }, [cart]);
 
   const removeFromCart = async (productId) => {
-    const res = await api.delete(`/api/remove/${productId}`);
+    if (cartItemsId) {
+      const res = await api.delete(`/api/remove/${cartItemsId}`);
 
-    setCart((cart) => cart.filter((item) => item.product_id !== productId));
-    setProductQuantity(0);
+      setCart((cart) => cart.filter((item) => item.product_id !== productId));
+      setProductQuantity(0);
 
-    console.log(shapes);
+      console.log(res.data);
+    }
   };
 
   const handleLocalChange = () => {
@@ -140,6 +142,7 @@ export function ProductDetails() {
       }
       const res = await api.post("/api/add-to-cart/", productItem);
       console.log(res.data);
+      setCartItemsId(res.data.cart_items_id);
     } catch (err) {
       console.error("error", err);
     }

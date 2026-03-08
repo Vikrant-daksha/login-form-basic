@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { LuCheck } from "react-icons/lu";
 import ProgressBar from "../components/ProgressBar";
 import api from "../api/axiosinstance";
 import { loadStripe } from "@stripe/stripe-js";
@@ -7,6 +8,7 @@ import {
   EmbeddedCheckout,
 } from "@stripe/react-stripe-js";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { IoMdClose } from "react-icons/io";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -15,22 +17,29 @@ function Checkout() {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [searchParams] = useSearchParams();
   const [productData, setProductData] = useState(null);
+  const [addressPopup, setAddressPopup] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const [shippingAddress, setShippingAddress] = useState(null);
+  const [databaseAddress, setDatabaseAddress] = useState(null);
+
+  const [recipient, setRecipient] = useState(null);
+  const [apt, setApt] = useState(null);
+  const [address, setAddress] = useState(null);
+  const [area, setArea] = useState(null);
+  const [stateName, setStateName] = useState(null);
+  const [city, setCity] = useState(null);
+  const [pincode, setPincode] = useState(null);
+  const [mobileNumber, setMobileNumber] = useState(null);
 
   const fetchClientSecret = useCallback(async () => {
     try {
       if (productData) {
-        let res;
-        if (!selectedVariant) {
-          res = await api.post(`/api/auth/buy-now/${productData.product_id}`, {
+        const res = await api.post(
+          `/api/auth/buy-now/${productData.product_id}`,
+          {
             cart: productData,
-          });
-        } else if (productData && selectedVariant) {
-          res = await api.post(`/api/auth/buy-now/${productData.product_id}`, {
-            cart: productData,
-            variant: selectedVariant[0],
-          });
-        }
+          }
+        );
 
         return res.data.clientSecret;
       } else {
@@ -45,6 +54,50 @@ function Checkout() {
   }, [productData]);
 
   const options = { fetchClientSecret };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (
+      !recipient ||
+      !apt ||
+      !address ||
+      !stateName ||
+      !city ||
+      !pincode ||
+      !mobileNumber
+    ) {
+      return alert("Fill Required Fields!");
+    } else {
+      const addressData = {
+        name: recipient,
+        apt: apt,
+        exact_address: address,
+        state_name: stateName,
+        city: city,
+        pincode: pincode,
+        mobile: mobileNumber,
+      };
+
+      if (!addressData) {
+        return alert("Could Not Submit Address");
+      }
+      const res = await api.post("/api/auth/add-address", addressData);
+      console.log(res.data.address_id);
+    }
+  };
+
+  useEffect(() => {
+    const getUserAddress = async () => {
+      const res = await api.get("/api/auth/get-user-address");
+      if (!res) {
+        return;
+      }
+      setDatabaseAddress(res.data);
+      console.log(res.data);
+    };
+
+    getUserAddress();
+  }, []);
 
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
@@ -103,27 +156,15 @@ function Checkout() {
 
   useEffect(() => {
     const buyNow = searchParams.get("productId");
-    const variantId = searchParams.get("variantId");
     if (!buyNow) {
       return;
     }
 
-    console.log(variantId);
-
     const getProduct = async () => {
       try {
-        const res = await api.get(`/api/products/${buyNow}`);
-        setProductData(res.data.product);
-        const findVariant = res.data.variant;
-        setSelectedVariant(
-          findVariant
-            .map((fv) => {
-              if (fv.id === Number(variantId)) {
-                return fv;
-              }
-            })
-            .filter((fv) => fv !== undefined)
-        );
+        const res = await api.get(`/api/products/cart-item/${buyNow}`);
+        console.log(res.data[0]);
+        setProductData(res.data[0]);
       } catch (err) {
         console.error("Error Fecthing Products");
       }
@@ -133,8 +174,8 @@ function Checkout() {
   }, [searchParams]);
 
   useEffect(() => {
-    console.log(productData);
-  }, [productData]);
+    console.log(databaseAddress);
+  }, [databaseAddress]);
 
   useEffect(() => {
     console.log(paymentStatus);
@@ -205,6 +246,10 @@ function Checkout() {
     }
   }
 
+  useEffect(() => {
+    console.log(selectedVariant);
+  }, [selectedVariant]);
+
   const [step, setStep] = useState(1);
   const totalSteps = 3;
 
@@ -216,182 +261,239 @@ function Checkout() {
     if (step < 3) setStep((step) => step + 1);
   };
 
-  const currentStep = () => {
-    switch (step) {
-      case 1:
-        return "Step 1";
-      case 2:
-        return "Step 2";
-      case 3:
-        return "Step 3";
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="m-5">
+      {addressPopup && (
+        <div className="flex justify-center items-center fixed top-0 left-0 w-full h-full z-50 backdrop-blur-[2px]">
+          <div className="bg-white h-fit w-2xs border border-black rounded-lg px-2 pb-2">
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-black mb-3">
+              <div className="">Select Address</div>
+              <button onClick={() => setAddressPopup(false)}>
+                <IoMdClose />
+              </button>
+            </div>
+            {databaseAddress.map((dba) => (
+              <div
+                key={dba.id}
+                className="bg-white h-fit border border-black rounded-lg mb-3"
+              >
+                <button
+                  className="w-full h-full text-sm"
+                  onClick={() => setAddressPopup(false)}
+                >
+                  <div>{dba.address_name}</div>
+                  <div className="truncate">{dba.address}</div>
+                  <div>{dba.mobile_no}</div>
+                  <div>{dba.pincode}</div>
+                  <div>{dba.state_name}</div>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div>
         <h1 className="text-2xl">Checkout</h1>
       </div>
       <div className="mt-1.5 w-full">
         <div className="flex justify-end">
-          <div className="flex justify-center items-center border border-black w-6 h-6 mx-1.5 rounded-full">
-            1
+          <div
+            className={
+              step >= 1
+                ? "flex justify-center items-center border border-black w-8 h-8 mx-1.5 rounded-full bg-black text-white "
+                : "flex justify-center items-center border border-black w-8 h-8 mx-1.5 rounded-full"
+            }
+          >
+            {step > 1 ? <LuCheck /> : "1"}
           </div>
-          <div className="relative w-3">
-            <div className="absolute mt-2.5 border-t-4 border-dotted border-gray-300 w-3"></div>
+          <div className="relative w-4">
+            <div
+              className={
+                step > 1
+                  ? "absolute mt-3.5 border-t-4 border-dotted border-black w-4"
+                  : "absolute mt-3.5 border-t-4 border-dotted border-gray-300 w-4"
+              }
+            ></div>
           </div>
-          <div className="flex justify-center items-center border border-gray-300 text-gray-300 w-6 h-6 mx-1.5 rounded-full">
-            2
+          <div
+            className={
+              step >= 2
+                ? "flex justify-center items-center border border-black w-8 h-8 mx-1.5 rounded-full bg-black text-white "
+                : "flex justify-center items-center border border-black w-8 h-8 mx-1.5 rounded-full"
+            }
+          >
+            {step > 2 ? <LuCheck /> : "2"}
           </div>
-          <div className="relative w-3">
-            <div className="absolute mt-2.5 border-t-4 border-dotted border-black w-3"></div>
+          <div className="relative w-4">
+            <div
+              className={
+                step > 2
+                  ? "absolute mt-3.5 border-t-4 border-dotted border-black w-4"
+                  : "absolute mt-3.5 border-t-4 border-dotted border-gray-300 w-4"
+              }
+            ></div>
           </div>
-          <div className="flex justify-center items-center border border-black w-6 h-6 mx-1.5 rounded-full">
-            3
+          <div
+            className={
+              step >= 3
+                ? "flex justify-center items-center border border-black w-8 h-8 mx-1.5 rounded-full bg-black text-white "
+                : "flex justify-center items-center border border-black w-8 h-8 mx-1.5 rounded-full"
+            }
+          >
+            {paymentStatus === "success" ? <LuCheck /> : "3"}
           </div>
         </div>
-        <ProgressBar totalSteps={totalSteps} steps={step} />
       </div>
       <div className="my-3 border border-black rounded-lg p-5">
         <div className="w-full">
           {step === 1 && (
             <div id="header" className="text-lg font-semibold">
-              Add Shipping Details
+              <div className="flex justify-between items-center">
+                <div className="text-lg font-semibold">
+                  Add Shipping Details
+                </div>
+                {databaseAddress && (
+                  <button
+                    onClick={() => setAddressPopup(true)}
+                    className="text-sm"
+                  >
+                    Select Address
+                  </button>
+                )}
+              </div>
               <div className="border-t border-gray-300 mt-0.5 mb-3"></div>
-              <div className="w-1/2">
+              <div className="w-1/2 font-light mx-40 py-2">
                 <div className="overflow-hidden m-auto">
-                  <div className="flex relative w-full">
-                    <div className="flex flex-col w-1/4">
-                      <label className="mb-1">First Name*</label>
+                  <form onSubmit={handleSubmit}>
+                    <div className="flex flex-col w-1/2 mb-3">
+                      <label className="mb-1">Recipient Name*</label>
                       <input
                         type="text"
                         className="border border-gray-300 p-2 pl-3 rounded-lg"
-                        // onChange={(e) => {
-                        //   setUsername(e.target.value);
-                        // }}
+                        onChange={(e) => {
+                          setRecipient(e.target.value);
+                        }}
                         placeholder="First Name"
-                        //value={username}
+                        value={recipient}
+                        maxLength={50}
                       ></input>
                     </div>
-                    <div className="flex flex-col w-1/4 ml-3">
-                      <label className="mb-1">Last Name</label>
+                    <div className="text-lg mb-1.5">Shipping Address</div>
+                    <div className="flex flex-col w-1/2 mb-3">
+                      <label className="mb-1">
+                        Flat No. / Apt Name / House No.
+                      </label>
                       <input
                         type="text"
                         className="border border-gray-300 p-2 pl-3 rounded-lg"
-                        // onChange={(e) => {
-                        //   setUsername(e.target.value);
-                        // }}
-                        placeholder="Last Name"
-                        //value={username}
+                        onChange={(e) => {
+                          setApt(e.target.value);
+                        }}
+                        placeholder="Flat No / Apartment / House"
+                        value={apt}
+                        required
+                        maxLength={50}
                       ></input>
                     </div>
-                  </div>
-                  <div className="flex flex-col w-1/2 mt-1">
-                    <label className="mb-1">Contact No</label>
-                    <input
-                      type="text"
-                      className="border border-gray-300 p-2 pl-3 rounded-lg"
-                      // onChange={(e) => {
-                      //   setUsername(e.target.value);
-                      // }}
-                      placeholder="Contact No"
-                      //value={username}
-                    ></input>
-                  </div>
-                  <div className="w-full mt-5 mb-5">
-                    <div className="text-lg mb-1.5">Shipping Address</div>
-                    <div className="flex w-full mb-1">
-                      <div className="flex flex-col w-1/6 mr-2.5">
-                        <label className="mb-1">Flat No</label>
-                        <input
-                          type="text"
-                          className="border border-gray-300 p-2 pl-3 rounded-lg"
-                          // onChange={(e) => {
-                          //   setUsername(e.target.value);
-                          // }}
-                          placeholder="Flat No"
-                          //value={username}
-                        ></input>
-                      </div>
-                      <div className="flex flex-col w-1/3">
-                        <label className="mb-1">
-                          Apartment Name / House No
-                        </label>
-                        <input
-                          type="text"
-                          className="border border-gray-300 p-2 pl-3 rounded-lg"
-                          // onChange={(e) => {
-                          //   setUsername(e.target.value);
-                          // }}
-                          placeholder="Apartment / House"
-                          //value={username}
-                        ></input>
-                      </div>
+                    <div className="flex flex-col w-1/2 mb-3">
+                      <label className="mb-1">Address</label>
+                      <textarea
+                        type="text"
+                        className="border border-gray-300 p-2 pl-3 rounded-lg max-h-40"
+                        onChange={(e) => {
+                          setAddress(e.target.value);
+                        }}
+                        placeholder="Address"
+                        rows={4}
+                        value={address}
+                        required
+                        maxLength={400}
+                      ></textarea>
                     </div>
-                    <div className="w-full mb-1">
-                      <div className="flex flex-col w-1/2">
-                        <label className="mb-1">Address</label>
-                        <input
-                          type="text"
-                          className="border border-gray-300 p-2 pl-3 rounded-lg"
-                          // onChange={(e) => {
-                          //   setUsername(e.target.value);
-                          // }}
-                          placeholder="Address"
-                          //value={username}
-                        ></input>
-                      </div>
+                    <div className="flex flex-col w-1/2 mb-3">
+                      <label className="mb-1">
+                        Locality / Area{" "}
+                        <span className="font-[100]"> (optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="border border-gray-300 p-2 pl-3 rounded-lg"
+                        onChange={(e) => {
+                          setArea(e.target.value);
+                        }}
+                        placeholder="locality / area"
+                        value={area}
+                        maxLength={100}
+                      ></input>
                     </div>
-                    <div className="flex w-full">
-                      <div className="flex flex-col w-1/6">
+                    <div className="w-1/2 grid grid-cols-3 gap-3">
+                      <div className="flex flex-col w-full">
                         <label className="mb-1">State</label>
                         <input
                           type="text"
                           className="border border-gray-300 p-2 pl-3 rounded-lg"
-                          // onChange={(e) => {
-                          //   setUsername(e.target.value);
-                          // }}
+                          onChange={(e) => {
+                            setStateName(e.target.value);
+                          }}
                           placeholder="State"
-                          //value={username}
+                          value={stateName}
+                          required
+                          maxLength={100}
                         ></input>
                       </div>
-                      <div className="flex flex-col w-1/6 mx-2.5">
+                      <div className="flex flex-col w-full">
                         <label className="mb-1">City</label>
                         <input
                           type="text"
                           className="border border-gray-300 p-2 pl-3 rounded-lg"
-                          // onChange={(e) => {
-                          //   setUsername(e.target.value);
-                          // }}
+                          onChange={(e) => {
+                            setCity(e.target.value);
+                          }}
                           placeholder="City"
-                          //value={username}
+                          value={city}
+                          required
+                          maxLength={100}
                         ></input>
                       </div>
-                      <div className="flex flex-col w-1/6">
+                      <div className="flex flex-col w-full">
                         <label className="mb-1">Pincode</label>
                         <input
                           type="text"
                           className="border border-gray-300 p-2 pl-3 rounded-lg"
-                          // onChange={(e) => {
-                          //   setUsername(e.target.value);
-                          // }}
+                          onChange={(e) => {
+                            setPincode(e.target.value);
+                          }}
                           placeholder="Pincode"
-                          //value={username}
+                          value={pincode}
+                          required
+                          maxLength={50}
                         ></input>
                       </div>
                     </div>
-                  </div>
-                  <div className="w-1/2 mb-10">
-                    <div className="text-lg mb-2">Payment Options</div>
-                    <button
-                      onClick={handleNext}
-                      className="w-full border border-black rounded-lg py-1"
-                    >
-                      Pay with Stripe
-                    </button>
-                  </div>
+                    <div className="flex flex-col w-1/2 my-3">
+                      <label className="mb-1">Mobile Number</label>
+                      <input
+                        type="text"
+                        className="border border-gray-300 p-2 pl-3 rounded-lg"
+                        onChange={(e) => {
+                          setMobileNumber(e.target.value);
+                        }}
+                        placeholder="Contact No"
+                        value={mobileNumber}
+                        required
+                        maxLength={50}
+                      ></input>
+                    </div>
+                    <div className="w-1/2 mb-10">
+                      <div className="text-lg mb-2">Payment Options</div>
+                      <button
+                        type="submit"
+                        className="w-full border border-black rounded-lg py-1"
+                      >
+                        Pay with Stripe
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>

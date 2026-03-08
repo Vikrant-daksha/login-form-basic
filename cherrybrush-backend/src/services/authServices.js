@@ -89,6 +89,7 @@ export const fetchCart = async (user_id) => {
         pi.price AS price,
         pi.images AS images,
         pi.sale AS sale,
+        pi.slug AS slug,
         pv.id AS variant_id,
         cs.color AS color,
         sz.size AS size,
@@ -262,11 +263,11 @@ export const createSession = async (cartItem) => {
   return session;
 };
 
-export const buyNowSession = async (cartItem, variant) => {
+export const buyNowSession = async (cartItem) => {
   let lineItems;
 
-  if (variant) {
-    lineItems = `${variant.size}, ${variant.color}, ${variant.shape}`;
+  if (cartItem.variant) {
+    lineItems = `${cartItem.size}, ${cartItem.color}, ${cartItem.shape}`;
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -278,7 +279,7 @@ export const buyNowSession = async (cartItem, variant) => {
         price_data: {
           currency: "inr",
           product_data: {
-            name: cartItem.product,
+            name: cartItem.name,
             images: [Object.values(cartItem.images)[0]],
             description: lineItems || [],
           },
@@ -347,13 +348,19 @@ export const addProductColor = async (color) => {
   return rows;
 };
 
-export const createOrder = async (user_id, amount, status, payment_method) => {
+export const createOrder = async (
+  user_id,
+  amount,
+  status,
+  payment_method,
+  address_id
+) => {
   const { rows } = await query(
     `
-    INSERT INTO orders(user_id, total_amount, status, payment_method, created_at)
-    VALUES($1, $2, $3, $4, NOW()) RETURNING *
+    INSERT INTO orders(user_id, total_amount, status, payment_method, created_at, address_id)
+    VALUES($1, $2, $3, $4, NOW(), $5) RETURNING *
     `,
-    [user_id, amount, status, payment_method]
+    [user_id, amount, status, payment_method, address_id]
   );
 
   return rows;
@@ -373,15 +380,15 @@ export const orderItems = async (order_id, cart_id) => {
       price_at_purchase
     )
     SELECT 
-      $1,                -- Your new order_id
+      $1,                
       ci.product_id, 
       ci.product_variant_id, 
-      p.product,         -- The snapshot name
-      col.color,         -- The snapshot color
-      sz.size,           -- The snapshot size
+      p.product,         
+      col.color,         
+      sz.size,           
       sh.shape,
       ci.quantity, 
-      p.price            -- The snapshot price (CRITICAL!)
+      p.price            
     FROM cart_items ci
     JOIN products p ON ci.product_id = p.product_id
     LEFT JOIN product_variants pv ON ci.product_variant_id = pv.id
@@ -426,6 +433,57 @@ export const orderHistory = async (user_id) => {
   const { rows } = await query(
     `
     SELECT * FROM orders WHERE user_id = $1
+    `,
+    [user_id]
+  );
+
+  return rows;
+};
+
+export const createAddress = async (user_id, address) => {
+  const {
+    name,
+    apt,
+    exact_address,
+    state,
+    area,
+    state_name,
+    city,
+    pincode,
+    mobile,
+  } = address;
+
+  if (Number(mobile) === NaN) {
+    return;
+  }
+
+  const mobileNumber = Number(mobile);
+
+  const { rows } = await query(
+    `
+    INSERT INTO address(user_id, address_name, apt, address, area, state_name, city, pincode, mobile_no)
+    VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *
+    `,
+    [
+      user_id,
+      name,
+      apt,
+      exact_address,
+      area || null,
+      state_name,
+      city,
+      pincode,
+      mobileNumber,
+    ]
+  );
+
+  return rows;
+};
+
+export const getUserAddress = async (user_id) => {
+  const { rows } = await query(
+    `
+    SELECT * FROM address WHERE user_id = $1
     `,
     [user_id]
   );

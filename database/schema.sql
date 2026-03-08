@@ -146,6 +146,7 @@ FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE;
 CREATE TABLE orders (
 	id SERIAL PRIMARY KEY,
 	user_id INT REFERENCES users(id) NOT NULL,
+    address_id INT REFERENCES address(id) NOT NULL,
 	total_amount BIGINT NOT NULL,
 	status VARCHAR(50) NOT NULL,
 	payment_method VARCHAR(50),
@@ -155,7 +156,7 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
     id SERIAL PRIMARY KEY,
     order_id INT REFERENCES orders(id) ON DELETE CASCADE,
-    product_id INT,
+    product_id INT NOT NULL,
     variant_id INT,
     product_name VARCHAR(255) NOT NULL, 
     variant_color VARCHAR(50), 
@@ -163,3 +164,16 @@ CREATE TABLE order_items (
     quantity INT NOT NULL,
     price_at_purchase BIGINT NOT NULL
 );
+
+CREATE TABLE address(
+	id SERIAL PRIMARY KEY,
+	user_id INT REFERENCES users(id) NOT NULL,
+	address_name VARCHAR(50),
+	apt VARCHAR(50),
+	address text NOT NULL,
+	area VARCHAR(100),
+	state_name VARCHAR(100),
+	city VARCHAR(100),
+	pincode VARCHAR(50),
+	mobile_no VARCHAR(30) NOT NULL
+)
