@@ -36,9 +36,9 @@ export function Navbar() {
         <nav className="py-1.5 bg-primary">
           <div className="flex items-center justify-between min-h-14 lg:justify-evenly">
             <div className="text-2xl px-8">
-              <a href="/" className="font-bold">
+              <Link to="/" className="font-bold">
                 <img src="/logo.gif" alt="Cherrybrush" className="h-10" />
-              </a>
+              </Link>
             </div>
             <div className="hidden justify-between text-gray-200 align-middle m-1.5 sm:flex">
               <ul className="flex flex-wrap mr-3">
@@ -55,7 +55,7 @@ export function Navbar() {
   after:duration-300
   hover:after:w-full"
                 >
-                  <a href="/catalog">Press On Nails</a>
+                  <Link to="/catalog">Press On Nails</Link>
                 </li>
                 <li
                   className="px-2.5 py-2 relative
@@ -265,7 +265,7 @@ export function Navbar() {
               </button>
               <ul className="">
                 <li className="px-5 py-2.5 border-b border-white">
-                  Press On Nails
+                  <Link to="/catalog" onClick={() => setIsOpen(false)} className="block w-full">Press On Nails</Link>
                 </li>
                 <li className="px-5 py-2.5 border-b border-white">Custom</li>
                 <li className="px-5 py-2.5 border-b border-white">

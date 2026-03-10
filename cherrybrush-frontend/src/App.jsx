@@ -1,5 +1,4 @@
 import {
-  HashRouter as Router,
   Routes,
   Route,
   Link,
