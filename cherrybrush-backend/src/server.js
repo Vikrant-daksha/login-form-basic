@@ -9,7 +9,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://cherrybrush.vercel.app/",
+    origin: "https://cherrybrush.vercel.app",
     credentials: true,
   })
 );
