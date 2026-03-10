@@ -1,0 +1,200 @@
+.order-details-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    color: #1a1a1a;
+}
+
+.order-details-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+.order-details-left {
+    grid-column: span 2;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.order-details-right {
+    grid-column: span 1;
+}
+
+.info-card {
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.info-card-title {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+}
+
+/* Shipping Info Section */
+.shipping-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.info-item label {
+    display: block;
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 4px;
+}
+
+.info-item p {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Item List Section */
+.order-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.order-item-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.order-item-card:last-child {
+    border-bottom: none;
+}
+
+.item-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.item-name {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #111;
+}
+
+.item-meta {
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    gap: 15px;
+}
+
+.item-pricing {
+    text-align: right;
+}
+
+.item-price {
+    font-weight: 600;
+    font-size: 16px;
+    color: #000;
+}
+
+.item-quantity {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Summary Row */
+.order-summary-total {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #f0f0f0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+}
+
+.total-label {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.total-amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: #000;
+}
+
+/* Transaction Info Section (Right) */
+.transaction-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-paid {
+    background: #e6f7ed;
+    color: #00a854;
+}
+
+.txn-id {
+    font-family: monospace;
+    word-break: break-all;
+    font-size: 13px;
+    background: #f8f8f8;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.order-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: #000;
+}
+
+.loading,
+.no-order {
+    text-align: center;
+    padding: 100px;
+    font-size: 18px;
+    color: #666;
+}
+
+@media (max-width: 900px) {
+    .order-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .order-details-left {
+        grid-column: span 1;
+    }
+}

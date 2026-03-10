@@ -9,27 +9,38 @@ import {
 } from "@stripe/react-stripe-js";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { IoMdClose } from "react-icons/io";
+import Timer from "../components/Timer";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 function Checkout() {
+  const expiryTime = useCallback(() => {
+    const time = new Date();
+    time.setSeconds(time.getSeconds() + 300);
+    return time;
+  }, []);
+
+  const [time] = useState(expiryTime);
+
   const navigate = useNavigate();
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [searchParams] = useSearchParams();
   const [productData, setProductData] = useState(null);
   const [addressPopup, setAddressPopup] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState(null);
-  const [shippingAddress, setShippingAddress] = useState(null);
+  const [selectedAddressId, setSelectedAddressId] = useState("new");
   const [databaseAddress, setDatabaseAddress] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [transaction, setTransaction] = useState(null);
+  const [orderId, setOrderId] = useState(null);
 
-  const [recipient, setRecipient] = useState(null);
-  const [apt, setApt] = useState(null);
-  const [address, setAddress] = useState(null);
-  const [area, setArea] = useState(null);
-  const [stateName, setStateName] = useState(null);
-  const [city, setCity] = useState(null);
-  const [pincode, setPincode] = useState(null);
-  const [mobileNumber, setMobileNumber] = useState(null);
+  const [recipient, setRecipient] = useState("");
+  const [apt, setApt] = useState("");
+  const [address, setAddress] = useState("");
+  const [area, setArea] = useState("");
+  const [stateName, setStateName] = useState("");
+  const [city, setCity] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
 
   const fetchClientSecret = useCallback(async () => {
     try {
@@ -54,6 +65,17 @@ function Checkout() {
   }, [productData]);
 
   const options = { fetchClientSecret };
+
+  const clearAddress = () => {
+    setRecipient("");
+    setApt("");
+    setAddress("");
+    setArea("");
+    setStateName("");
+    setCity("");
+    setPincode("");
+    setMobileNumber("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,9 +103,52 @@ function Checkout() {
       if (!addressData) {
         return alert("Could Not Submit Address");
       }
-      const res = await api.post("/api/auth/add-address", addressData);
-      console.log(res.data.address_id);
+
+      let savedAddress;
+
+      if (selectedAddressId !== "new") {
+        const res = await api.get(`/api/auth/address/${selectedAddressId}`);
+        savedAddress = res.data;
+        console.log(res.data);
+      } else {
+        const res = await api.post("/api/auth/add-address", addressData);
+        savedAddress = res.data;
+        console.log(res.data);
+      }
+
+      const cartId = searchParams.get("cartId");
+
+      if (savedAddress && (productData || cartId)) {
+        const addressId = savedAddress.id;
+        const res = await api.post("/api/auth/create-order", {
+          address_id: addressId,
+          cart_id: cartId,
+          productData: productData,
+          payment_method: paymentMethod,
+        });
+        localStorage.setItem("orderId", res.data.order_id);
+        console.log(res.data.order_id);
+      }
+
+      handleNext();
     }
+  };
+
+  const handleAddress = async (address) => {
+    if (!address) {
+      return;
+    }
+    clearAddress();
+
+    setSelectedAddressId(address.id);
+    setRecipient(address.address_name || "");
+    setAddress(address.address || "");
+    setApt(address.apt || "");
+    setArea(address.area || "");
+    setMobileNumber(address.mobile_no || "");
+    setPincode(address.pincode || "");
+    setStateName(address.state_name || "");
+    setCity(address.city || "");
   };
 
   useEffect(() => {
@@ -115,6 +180,7 @@ function Checkout() {
       while (attempt < maxRetries && !isCancelled) {
         try {
           const res = await api.get(`/api/auth/checkout/${sessionId}`);
+          setTransaction(res.data);
           console.log(res.data);
 
           if (!isCancelled) {
@@ -174,18 +240,41 @@ function Checkout() {
   }, [searchParams]);
 
   useEffect(() => {
-    console.log(databaseAddress);
-  }, [databaseAddress]);
+    const createTransaction = async () => {
+      const orderId = localStorage.getItem("orderId");
+      if (transaction && transaction !== 404) {
+        const res = await api.post(`/api/auth/create-transaction/${orderId}`, {
+          transaction,
+        });
+        setOrderId(res.data.orderStatus.id);
+        console.log(res.data);
+      }
+    };
+
+    createTransaction();
+  }, [transaction]);
 
   useEffect(() => {
-    console.log(paymentStatus);
-  }, [paymentStatus]);
+    console.log(selectedAddressId);
+  }, [selectedAddressId]);
+
+  useEffect(() => {
+    console.log(orderId);
+  }, [orderId]);
+
+  useEffect(() => {
+    console.log(transaction);
+  }, [transaction]);
 
   useEffect(() => {
     if (paymentStatus === "success") {
+      let id;
+      if (!orderId) {
+        id = localStorage.getItem("orderId");
+      }
       const timer = setTimeout(() => {
-        navigate("/checkout/success");
-      }, 3000); // show success for 3 seconds, then redirect
+        navigate(`/checkout/success/${orderId || id}`);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [paymentStatus, navigate]);
@@ -246,10 +335,6 @@ function Checkout() {
     }
   }
 
-  useEffect(() => {
-    console.log(selectedVariant);
-  }, [selectedVariant]);
-
   const [step, setStep] = useState(1);
   const totalSteps = 3;
 
@@ -279,7 +364,10 @@ function Checkout() {
               >
                 <button
                   className="w-full h-full text-sm"
-                  onClick={() => setAddressPopup(false)}
+                  onClick={() => {
+                    setAddressPopup(false);
+                    handleAddress(dba);
+                  }}
                 >
                   <div>{dba.address_name}</div>
                   <div className="truncate">{dba.address}</div>
@@ -352,12 +440,12 @@ function Checkout() {
                 <div className="text-lg font-semibold">
                   Add Shipping Details
                 </div>
-                {databaseAddress && (
+                {databaseAddress?.length !== 0 && (
                   <button
                     onClick={() => setAddressPopup(true)}
-                    className="text-sm"
+                    className="text-sm border border-black px-2 py-1 rounded-lg mb-2"
                   >
-                    Select Address
+                    Saved Address
                   </button>
                 )}
               </div>
@@ -488,6 +576,7 @@ function Checkout() {
                       <div className="text-lg mb-2">Payment Options</div>
                       <button
                         type="submit"
+                        onClick={() => setPaymentMethod("stripe")}
                         className="w-full border border-black rounded-lg py-1"
                       >
                         Pay with Stripe
@@ -530,14 +619,27 @@ function Checkout() {
                     id="Timer"
                     className="h-40 w-40 flex justify-center items-center rounded-full border border-black mb-2"
                   >
-                    {paymentStatus || "00:00"}
+                    {paymentStatus === "success" ? (
+                      "success"
+                    ) : (
+                      <Timer
+                        expiryTimestamp={time}
+                        size={"1.5rem"}
+                        shouldPause={paymentStatus === "fail"}
+                        onExpire={() => setPaymentStatus("fail")}
+                      />
+                    )}
                   </div>
                   <div className="flex flex-col justify-center items-center">
                     <div className="text-xs text-gray-400 mb-1">
-                      Processing Payment...
+                      {paymentStatus === "success"
+                        ? ""
+                        : "Processing Payment..."}
                     </div>
                     <div className="text-sm text-gray-600">
-                      Do Not Close This Window.
+                      {paymentStatus === "success"
+                        ? "Payment Confirmed."
+                        : "Do Not Close This Window."}
                     </div>
                   </div>
                 </div>

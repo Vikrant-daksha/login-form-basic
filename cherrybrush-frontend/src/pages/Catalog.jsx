@@ -4,7 +4,6 @@ export function Catalog() {
   /*<SortBy value={sortBy} onChange={setSortBy}/>*/
   return (
     <>
-      <div>All Nails</div>
       <div className="px-4 py-5">
         <ProductList page={"Press on Nails"} />
       </div>

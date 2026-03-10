@@ -152,7 +152,7 @@ export function ProductDetails() {
 
   return (
     <>
-      <div className="w-full py-6 h-[100000px]">
+      <div className="w-full py-6">
         <div>
           <div className="w-full grid grid-cols-1 px-6 md:grid-cols-2 md:px-12">
             <div className="w-full flex justify-center top-24 h-min md:sticky md:pr-5">

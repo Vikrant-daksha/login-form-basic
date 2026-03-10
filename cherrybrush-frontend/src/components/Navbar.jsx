@@ -6,7 +6,12 @@ import "../App.css";
 import { useAuth } from "../context/Authcontext.jsx";
 import { User2 } from "lucide-react";
 import { FaCartShopping } from "react-icons/fa6";
-import { LuHistory, LuLogOut } from "react-icons/lu";
+import {
+  LuHistory,
+  LuLogOut,
+  LuPackage,
+  LuClipboardList,
+} from "react-icons/lu";
 import api from "../api/axiosinstance.jsx";
 
 export function Navbar() {
@@ -48,14 +53,14 @@ export function Navbar() {
   return (
     <>
       <div className="sticky top-0 z-10 w-full leading-none">
-        <nav className="py-1.5 bg-amber-300">
+        <nav className="py-1.5 bg-primary">
           <div className="flex items-center justify-between min-h-14 lg:justify-evenly">
             <div className="text-2xl px-8">
               <a href="/" className="font-bold">
-                Logo
+                <img src="/logo.gif" alt="Cherrybrush" className="h-10" />
               </a>
             </div>
-            <div className="hidden justify-between align-middle m-1.5 sm:flex">
+            <div className="hidden justify-between text-gray-200 align-middle m-1.5 sm:flex">
               <ul className="flex flex-wrap mr-3">
                 <li
                   className="px-2.5 py-2 relative
@@ -124,7 +129,7 @@ export function Navbar() {
                 </button>
               </div>
             </div>
-            <div className="hidden sm:flex pr-7">
+            <div className="hidden text-gray-200 sm:flex pr-7">
               <div className="flex items-center px-5 text-xl">
                 <Link to="/cart" className="flex items-center">
                   <FaCartShopping></FaCartShopping>
@@ -140,13 +145,13 @@ export function Navbar() {
                     }}
                     className="relative inline-flex items-center"
                   >
-                    <div className="p-0.5 border rounded-full mr-2">
+                    <div className="p-0.5 border border-gray-200 rounded-full mr-2">
                       <User2 />
                     </div>
                   </button>
-                  <div className="relative">
+                  <div className="relative text-black">
                     {accountOverlay && (
-                      <div className="absolute border border-black rounded-lg top-10 right-0 bg-gray-200 flex justify-center items-center">
+                      <div className="absolute border border-black rounded-lg top-10 right-0 bg-background flex justify-center items-center">
                         <div className="w-3xs mx-2">
                           <div className="my-5 h-20 flex flex-col justify-center items-center">
                             <div className="p-2 border border-black rounded-full">
@@ -159,7 +164,7 @@ export function Navbar() {
                               {userProfile.email || userProfile.phone_no || ""}
                             </div>
                           </div>
-                          <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
+                          <div className="flex justify-start items-center hover:bg-secondary rounded-full">
                             <button
                               className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
                               onClick={() => {
@@ -195,9 +200,37 @@ export function Navbar() {
                               Order History
                             </button>
                           </div>
+                          {user?.role === "admin" && (
+                            <>
+                              <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
+                                <button
+                                  className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
+                                  onClick={() => {
+                                    handleRedirect("/product");
+                                    setAccountOverlay(false);
+                                  }}
+                                >
+                                  <LuPackage className="h-5 mr-3" />
+                                  Add Product
+                                </button>
+                              </div>
+                              <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
+                                <button
+                                  className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
+                                  onClick={() => {
+                                    handleRedirect("/admin/orders");
+                                    setAccountOverlay(false);
+                                  }}
+                                >
+                                  <LuClipboardList className="h-5 mr-3" />
+                                  All Orders
+                                </button>
+                              </div>
+                            </>
+                          )}
                           <div className="flex justify-start items-center rounded-full my-4 ">
                             <button
-                              className="w-full px-3 py-3 flex justify-center border border-white items-center bg-gray-50 text-[1rem] hover:cursor-pointer hover:bg-gray-100 rounded-full"
+                              className="w-full px-3 py-3 flex justify-center border hover:text-secondary border-white items-center hover:bg-primary text-[1rem] hover:cursor-pointer bg-secondary text-primary rounded-full transition-all ease-in-out"
                               onClick={() => {
                                 handleLogout();
                                 setAccountOverlay(false);
@@ -311,6 +344,32 @@ export function Navbar() {
                           <LuHistory className="mr-2 p-0.5 h-5 w-5" />
                           Order History
                         </button>
+                        {user?.role === "admin" && (
+                          <>
+                            <button
+                              onClick={() => {
+                                handleRedirect("/product");
+                                setAccountOverlay(false);
+                                setIsOpen(false);
+                              }}
+                              className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
+                            >
+                              <LuPackage className="mr-2 p-0.5 h-5 w-5" />
+                              Add Product
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleRedirect("/admin/orders");
+                                setAccountOverlay(false);
+                                setIsOpen(false);
+                              }}
+                              className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
+                            >
+                              <LuClipboardList className="mr-2 p-0.5 h-5 w-5" />
+                              All Orders
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

@@ -62,6 +62,13 @@ router.get(
 );
 
 router.get(
+  "/order-history/admin",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.fetchAllOrders
+);
+
+router.get(
   "/order-history/:orderId",
   authMiddleware.loginRequire,
   authController.getOrderById
@@ -77,6 +84,46 @@ router.get(
   "/get-user-address",
   authMiddleware.loginRequire,
   authController.getUserAddress
+);
+
+router.get(
+  "/address/:addressId",
+  authMiddleware.loginRequire,
+  authController.getAddressById
+);
+
+router.post(
+  "/create-transaction/:orderId",
+  authMiddleware.loginRequire,
+  authController.createTransaction
+);
+
+router.delete(
+  "/order/:orderId",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.deleteOrder
+);
+
+router.post(
+  "/add-color",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.addColor
+);
+
+router.post(
+  "/add-size",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.addSize
+);
+
+router.post(
+  "/add-shape",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.addShape
 );
 
 export default router;

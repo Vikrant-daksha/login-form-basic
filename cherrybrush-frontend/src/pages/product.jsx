@@ -28,10 +28,17 @@ export function Product() {
   const [addVariantPopUp, setAddVariantPopUp] = useState(false);
   const [deletePopUp, setDeletePopUP] = useState(false);
   const [trackInventory, setTrackInventory] = useState(false);
+  const [addColorPopup, setAddColorPopup] = useState(false);
+  const [addShapePopup, setAddShapePopup] = useState(false);
+  const [addSizePopup, setAddSizePopup] = useState(false);
 
   const [colorVariants, setColorVariants] = useState(null);
   const [sizeVariants, setSizeVariants] = useState(null);
   const [shapeVariants, setShapesVariants] = useState(null);
+
+  const [addColorToDB, setAddColorToDB] = useState(null);
+  const [addSizeToDB, setAddSizeToDB] = useState(null);
+  const [addShapeToDB, setAddShapeToDB] = useState(null);
 
   const fetchingVariants = async () => {
     const res = await api.get("/api/auth/product/variants");
@@ -47,7 +54,7 @@ export function Product() {
 
   useEffect(() => {
     fetchingVariants();
-  }, []);
+  }, [addColorPopup, addShapePopup, addSizePopup]);
 
   const clearFormData = () => {
     setProduct("");
@@ -131,15 +138,29 @@ export function Product() {
     console.log(res.data);
   };
 
-  useEffect(() => {
-    const justToAwait = async () => {
-      const res = await api.post("/api/auth/create-order");
+  const addColor = async () => {
+    if (!addColorToDB) {
+      return;
+    }
+    const res = await api.post("/api/auth/add-color", { color: addColorToDB });
+    console.log(res);
+  };
 
-      console.log(res.data);
-    };
+  const addShape = async () => {
+    if (!addShapeToDB) {
+      return;
+    }
+    const res = await api.post("/api/auth/add-shape", { shape: addShapeToDB });
+    console.log(res);
+  };
 
-    justToAwait();
-  }, []);
+  const addSize = async () => {
+    if (!addSizeToDB) {
+      return;
+    }
+    const res = await api.post("/api/auth/add-size", { size: addSizeToDB });
+    console.log(res);
+  };
 
   const submit = async () => {
     try {
@@ -393,7 +414,19 @@ export function Product() {
               </div>
               <div className="w-full border-b mb-2"></div>
               <div className="flex flex-col mb-2">
-                <label className=" mb-1">Add New Product Color</label>
+                <div className="flex justify-between items-center my-2">
+                  <label className="">Add New Product Color</label>
+                  <button
+                    onClick={() => {
+                      setAddColorPopup(true);
+                      setAddVariantPopUp(false);
+                    }}
+                    className="w-1/6 flex justify-center items-center border border-black px-2 py-0.5 rounded-sm"
+                  >
+                    <LuPlus className="mr-2" />
+                    Color
+                  </button>
+                </div>
                 <select
                   className="border border-gray-700 active:border-gray-800 py-2 px-2 rounded-lg invalid:text-gray-500"
                   required
@@ -408,7 +441,19 @@ export function Product() {
                     </option>
                   ))}
                 </select>
-                <label className=" mb-1 mt-3">Add New Product Shape</label>
+                <div className="flex justify-between items-center my-2">
+                  <label className="">Add New Product Shape</label>
+                  <button
+                    onClick={() => {
+                      setAddShapePopup(true);
+                      setAddVariantPopUp(false);
+                    }}
+                    className="w-1/6 flex justify-center items-center border border-black px-2 py-0.5 rounded-sm"
+                  >
+                    <LuPlus className="mr-3" />
+                    Shape
+                  </button>
+                </div>
                 <select
                   className="border border-gray-700 active:border-gray-800 py-2 px-2 rounded-lg invalid:text-gray-500"
                   required
@@ -423,7 +468,19 @@ export function Product() {
                     </option>
                   ))}
                 </select>
-                <label className=" mb-1 mt-3">Add New Product Size</label>
+                <div className="flex justify-between items-center my-2">
+                  <label className="">Add New Product Size</label>
+                  <button
+                    onClick={() => {
+                      setAddSizePopup(true);
+                      setAddVariantPopUp(false);
+                    }}
+                    className="w-1/6 flex justify-center items-center border border-black px-2 py-0.5 rounded-sm"
+                  >
+                    <LuPlus className="mr-3" />
+                    Size
+                  </button>
+                </div>
                 <select
                   className="border border-gray-700 active:border-gray-800 py-2 px-2 rounded-lg invalid:text-gray-500"
                   required
@@ -543,6 +600,138 @@ export function Product() {
                   className="w-full border border-red-600 bg-red-600 text-white py-1.5 rounded-lg"
                 >
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {addColorPopup && (
+        <div className="flex justify-center items-center fixed top-0 left-0 w-full h-full z-50 backdrop-blur-[2px]">
+          <div className="w-1/4 h-max bg-white border border-black rounded-xl">
+            <div className="m-4">
+              <div className="flex justify-between items-center mb-1">
+                <div className="text-lg">Add Color</div>
+                <div>
+                  <button
+                    onClick={() => {
+                      setAddColorPopup(false);
+                      setAddVariantPopUp(true);
+                    }}
+                    className="text-xl"
+                  >
+                    <IoMdClose />
+                  </button>
+                </div>
+              </div>
+              <div className="w-full border-b mb-2"></div>
+              <div className="flex flex-col mb-2">
+                <label className=" mb-1">Add New Color</label>
+                <input
+                  type="text"
+                  className="border border-gray-700 py-2 px-2 rounded-lg"
+                  placeholder="add color to db"
+                  onChange={(e) => setAddColorToDB(e.target.value)}
+                ></input>
+              </div>
+              <div className="grid grid-cols-1">
+                <button
+                  onClick={() => {
+                    addColor();
+                    setAddColorPopup(false);
+                    setAddVariantPopUp(true);
+                  }}
+                  className="w-full border border-black py-1.5 rounded-lg"
+                >
+                  Add Color
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {addShapePopup && (
+        <div className="flex justify-center items-center fixed top-0 left-0 w-full h-full z-50 backdrop-blur-[2px]">
+          <div className="w-1/4 h-max bg-white border border-black rounded-xl">
+            <div className="m-4">
+              <div className="flex justify-between items-center mb-1">
+                <div className="text-lg">Add Color</div>
+                <div>
+                  <button
+                    onClick={() => {
+                      setAddShapePopup(false);
+                      setAddVariantPopUp(true);
+                    }}
+                    className="text-xl"
+                  >
+                    <IoMdClose />
+                  </button>
+                </div>
+              </div>
+              <div className="w-full border-b mb-2"></div>
+              <div className="flex flex-col mb-2">
+                <label className=" mb-1">Add New Shape</label>
+                <input
+                  type="text"
+                  className="border border-gray-700 py-2 px-2 rounded-lg"
+                  placeholder="add shape to db"
+                  onChange={(e) => setAddShapeToDB(e.target.value)}
+                ></input>
+              </div>
+              <div className="grid grid-cols-1">
+                <button
+                  onClick={() => {
+                    addShape();
+                    setAddShapePopup(false);
+                    setAddVariantPopUp(true);
+                  }}
+                  className="w-full border border-black py-1.5 rounded-lg"
+                >
+                  Add Color
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {addSizePopup && (
+        <div className="flex justify-center items-center fixed top-0 left-0 w-full h-full z-50 backdrop-blur-[2px]">
+          <div className="w-1/4 h-max bg-white border border-black rounded-xl">
+            <div className="m-4">
+              <div className="flex justify-between items-center mb-1">
+                <div className="text-lg">Add Color</div>
+                <div>
+                  <button
+                    onClick={() => {
+                      setAddSizePopup(false);
+                      setAddVariantPopUp(true);
+                    }}
+                    className="text-xl"
+                  >
+                    <IoMdClose />
+                  </button>
+                </div>
+              </div>
+              <div className="w-full border-b mb-2"></div>
+              <div className="flex flex-col mb-2">
+                <label className=" mb-1">Add New Size</label>
+                <input
+                  type="text"
+                  className="border border-gray-700 py-2 px-2 rounded-lg"
+                  placeholder="add shape to db"
+                  onChange={(e) => setAddSizeToDB(e.target.value)}
+                ></input>
+              </div>
+              <div className="grid grid-cols-1">
+                <button
+                  onClick={() => {
+                    addSize();
+                    setAddSizePopup(false);
+                    setAddVariantPopUp(true);
+                  }}
+                  className="w-full border border-black py-1.5 rounded-lg"
+                >
+                  Add Color
                 </button>
               </div>
             </div>

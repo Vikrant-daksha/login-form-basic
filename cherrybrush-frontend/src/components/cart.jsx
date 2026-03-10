@@ -13,8 +13,8 @@ function Cart() {
 
   const [cart, setCart] = useState([]);
   const [subTotal, setSubTotal] = useState(0);
-  const [deliveryCost, setDeliveryCost] = useState(40);
-  const [discount, setDiscount] = useState(1000);
+  const [deliveryCost, setDeliveryCost] = useState(0);
+  const [discount, setDiscount] = useState(0);
 
   const { user } = useAuth();
 
@@ -149,7 +149,7 @@ function Cart() {
             </div>
             <div>
               <Link to={"/catalog"}>
-                <button className="text-[12px] rounded-[5px] px-4 py-2.5 bg-pink-100">
+                <button className="text-[12px] text-secondary rounded-[5px] px-4 py-2.5 bg-primary">
                   Continue Shopping
                 </button>
               </Link>
@@ -283,14 +283,12 @@ function Cart() {
         <div id="separator" className="p-2"></div>
         <div id="Grand Total" className="flex justify-between font-bold">
           <div className="flex">Grand Total:</div>
-          <div className="flex">
-            {parseFloat(subTotal + deliveryCost - discount).toFixed(2)}
-          </div>
+          <div className="flex">{parseFloat(subTotal).toFixed(2)}</div>
         </div>
         <div id="separator" className="p-2"></div>
         <div id="checkout" className="flex justify-end">
           <button
-            className="p-3 bg-pink-200 rounded-lg"
+            className="p-3 bg-primary text-secondary rounded-lg"
             onClick={() => handleCheckout()}
           >
             Proceed to Checkout

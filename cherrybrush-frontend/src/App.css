@@ -8,33 +8,33 @@
 }
 
 .no-select-global {
-  -webkit-user-select: none; 
-  -moz-user-select: none;    
-  -ms-user-select: none;     
-  user-select: none;         
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-*{
+* {
   font-family: "Josefin Sans", Arial, Helvetica, sans-serif;
 }
 
-.primary{
+.primary {
   color: black;
 }
 
-.secondary{
+.secondary {
   color: gray;
 }
 
-.link-img{
+.link-img {
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 4px;
-  aspect-ratio: 1/1;  
+  aspect-ratio: 1/1;
   width: clamp(40px, 50px, 60px);
 }
 
-.link-img img{
+.link-img img {
   height: 100%;
   width: 100%;
   border-radius: 4px;
@@ -46,7 +46,8 @@
 
 .img-wrap {
   width: 100%;
-  aspect-ratio: 16 / 9; /* threshold control */
+  aspect-ratio: 16 / 9;
+  /* threshold control */
   overflow: hidden;
 }
 
@@ -57,12 +58,14 @@
   object-position: center;
 }
 
-.img-square{
+.img-square {
   width: 100%;
-  aspect-ratio: 1 / 1; /* threshold control */
+  aspect-ratio: 1 / 1;
+  /* threshold control */
   overflow: hidden;
 }
-.img-square img{
+
+.img-square img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -181,6 +184,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -188,9 +192,13 @@
 
 /* global.css OR inside <style jsx global> */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE, Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  /* IE, Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
+
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;             /* Chrome, Safari */
+  display: none;
+  /* Chrome, Safari */
 }

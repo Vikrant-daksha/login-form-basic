@@ -42,10 +42,4 @@ router.delete(
   clientController.removeFromCart
 );
 
-// router.get("/create-order", authMiddleware.loginRequire, authController.cart, createCheckoutSession);
-
-// router.delete("/client/:id", clientController.deleteUser);
-
-// router.get("/client/search", clientController.searchUser);
-
 export default router;

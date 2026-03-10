@@ -23,6 +23,8 @@ import Cart from "./components/cart";
 import Checkout from "./pages/Checkout.jsx";
 import OrderSuccess from "./pages/OrderSuccess.jsx";
 import OrderHistory from "./pages/OrderHistory.jsx";
+import OrderDetails from "./pages/OrderDetails.jsx";
+import AdminOrders from "./pages/AdminOrders.jsx";
 
 function App() {
   const { user, loading } = useAuth();
@@ -42,18 +44,78 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/cart" element={<Cart />} />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Cart />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/product" element={<Product />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/" element={<Home />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/products/:slug" element={<ProductDetails />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/checkout/success" element={<OrderSuccess />} />
-          <Route path="/order-history" element={<OrderHistory />} />
+          <Route
+            path="/product"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <Product />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <AdminOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/checkout/success/:orderId"
+            element={
+              <ProtectedRoute>
+                <OrderSuccess />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order-history"
+            element={
+              <ProtectedRoute>
+                <OrderHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order-history/:orderId"
+            element={
+              <ProtectedRoute>
+                <OrderDetails />
+              </ProtectedRoute>
+            }
+          />
+          {/* Admin Protected Route Example */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <div>Admin Dashboard - Only for users with role 'admin'</div>
+              </ProtectedRoute>
+            }
+          />
         </Route>
       </Routes>
     </>

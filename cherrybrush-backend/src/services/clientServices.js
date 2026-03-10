@@ -7,11 +7,15 @@ export const getUsers = async () => {
 };
 
 export const updateUser = async (userData, userId) => {
-  const { email, phone_no } = userData;
+  const { email, phone_no, username } = userData;
   const { rows } = await query(
-    `UPDATE users SET email = $1, phone_no = $2
-         WHERE id = $3 RETURNING *`,
-    [email, phone_no, userId]
+    `UPDATE users 
+     SET email = COALESCE($1, email), 
+         phone_no = COALESCE($2, phone_no),
+         username = COALESCE($3, username),
+         updated_at = NOW()
+     WHERE id = $4 RETURNING *`,
+    [email || null, phone_no || null, username || null, userId]
   );
   return rows[0];
 };
@@ -81,12 +85,10 @@ export const addItem = async (cart_id, product_id, product_variant_id) => {
   return rows[0];
 };
 
-// c:\Users\vikra\Desktop\Login Form\login_form\cherrybrush-backend\src\services\clientServices.js
-
 export const updateQuantity = async (
   cart_id,
-  cart_items_id, // Renamed for clarity
-  product_variant_id, // We keep this for the signature but might not need it in the query
+  cart_items_id,
+  product_variant_id,
   quantity
 ) => {
   if (quantity < 1) return;
@@ -96,46 +98,11 @@ export const updateQuantity = async (
      SET quantity = $1
      WHERE cart_id = $2 AND cart_items_id = $3
      RETURNING *`,
-    [quantity, cart_id, cart_items_id] // Only need these two!
+    [quantity, cart_id, cart_items_id]
   );
 
   return rows[0];
 };
-
-// export const updateQuantity = async (
-//   cart_id,
-//   product_id,
-//   product_variant_id,
-//   quantity
-// ) => {
-//   if (quantity < 1) return;
-
-//   const { rows } = await query(
-//     `UPDATE cart_items
-//     SET quantity = $1
-//     WHERE cart_id = $2 AND cart_items_id = $3 AND (product_variant_id = $4 OR (product_variant_id IS NULL AND $4 IS NULL)) RETURNING *`,
-//     [quantity, cart_id, product_id, product_variant_id]
-//   );
-
-//   return rows[0];
-// };
-
-// export const deleteCart = async(cart_id) => {
-
-//     const { rows } = await query(
-//         `INSERT INTO cart_items (product_id, quantity, cart_id)
-//         VALUES ($1, 1, $2)
-
-//         ON CONFLICT (product_id, cart_id)
-
-//         DO UPDATE SET quantity = cart_items.quantity + 1
-
-//         RETURNING *`,
-//         [product_id, cart_id]
-//     );
-
-//     return rows[0]
-// }
 
 export const createCart = async (user_id) => {
   const { rows } = await query(

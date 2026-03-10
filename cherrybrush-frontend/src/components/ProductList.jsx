@@ -177,7 +177,7 @@ export function ProductList({ amt, layout, page = "" }) {
               return (
                 <div
                   key={product?.product_id}
-                  className="max-w-64 w-full h-fit mx-auto bg-pink-50 rounded-xl"
+                  className="max-w-64 w-full h-fit mx-auto p-3 bg-secondary border border-black"
                 >
                   <Link to={`/products/${product?.slug}`}>
                     <div className="relative rounded-xl overflow-clip">
@@ -201,10 +201,10 @@ export function ProductList({ amt, layout, page = "" }) {
                       )}
                     </div>
                     <div className="flex flex-col items-center text-wrap my-3">
-                      <p className="text-xl uppercase tracking-widest mb-1">
+                      <p className="text-lg text-left uppercase tracking-widest mb-1 truncate">
                         {product.product}
                       </p>
-                      <p className="text-[16px]">
+                      <p className="text-[16px] text-left">
                         <span id="currency-symbol" className="pr-1">
                           ₹
                         </span>
@@ -217,7 +217,7 @@ export function ProductList({ amt, layout, page = "" }) {
                       onClick={() => {
                         addToCart(product?.product_id);
                       }}
-                      className="w-full flex justify-center items-center rounded-lg py-1.5 text-[12px] uppercase tracking-wide bg-pink-100"
+                      className="w-full flex justify-center items-center rounded-lg py-1.5 text-[12px] uppercase tracking-wide bg-primary text-secondary"
                     >
                       <FaCartShopping className="mr-3" />
                       {qty === 0 ? (

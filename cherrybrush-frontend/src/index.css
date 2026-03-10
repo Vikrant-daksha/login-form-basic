@@ -3,6 +3,20 @@
 
 @theme {
   --font-josefin-sans: "Josefin Sans";
+
+  /* Custom Professional Grayscale Palette */
+  --color-night: #131313;
+  --color-onyx: #3C3C3C;
+  --color-dim: #646464;
+  --color-silver: #B5B5B5;
+  --color-smoke: #F3F3F3;
+
+  /* Semantic UI Tokens */
+  --color-primary: var(--color-night);
+  --color-secondary: var(--color-onyx);
+  --color-accent: var(--color-dim);
+  --color-muted: var(--color-silver);
+  --color-background: var(--color-smoke);
 }
 
 * {
@@ -10,14 +24,15 @@
 }
 
 /* Root elements */
-html, body {
+html,
+body {
   height: 100%;
 }
 
 body {
   font-family: "Josefin Sans", Arial, Helvetica, sans-serif;
-  background-color: #fff;
-  color: #111;
+  background-color: var(--color-background);
+  color: var(--color-primary);
 }
 
 #root {
@@ -29,6 +44,11 @@ body {
 }
 
 @keyframes scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }

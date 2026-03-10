@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS cart_items(
 
 CREATE TABLE product_variants (
     id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES products(id),
+    product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
     color_id INT REFERENCES colors(id),
     size_id INT REFERENCES sizes(id),
     stock INT,
@@ -62,7 +62,7 @@ CREATE TABLE shapes (
 
 CREATE TABLE product_variants (
     id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES products(product_id),
+    product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
     color_id INT REFERENCES colors(id),
     size_id INT REFERENCES sizes(id),
 	shape_id INT REFERENCES shapes(id),
@@ -140,8 +140,28 @@ ALTER TABLE cart_items
 ADD CONSTRAINT cart_items_product_id_fkey
 FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE;
 
+-- Handle product_variants CASCADE
+--@block
+ALTER TABLE product_variants DROP CONSTRAINT IF EXISTS product_variants_product_id_fkey;
+--@block
+ALTER TABLE product_variants
+ADD CONSTRAINT product_variants_product_id_fkey
+FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE;
+
 -- Repeat for every table that references products
 
+CREATE TABLE address(
+	id SERIAL PRIMARY KEY,
+	user_id INT REFERENCES users(id) NOT NULL,
+	address_name VARCHAR(50),
+	apt VARCHAR(50),
+	address text NOT NULL,
+	area VARCHAR(100),
+	state_name VARCHAR(100),
+	city VARCHAR(100),
+	pincode VARCHAR(50),
+	mobile_no VARCHAR(30) NOT NULL
+)
 
 CREATE TABLE orders (
 	id SERIAL PRIMARY KEY,
@@ -150,7 +170,8 @@ CREATE TABLE orders (
 	total_amount BIGINT NOT NULL,
 	status VARCHAR(50) NOT NULL,
 	payment_method VARCHAR(50),
-	created_at TIMESTAMPTZ
+	created_at TIMESTAMPTZ,
+	is_email_sent BOOLEAN DEFAULT FALSE
 )
 
 CREATE TABLE order_items (
@@ -165,15 +186,13 @@ CREATE TABLE order_items (
     price_at_purchase BIGINT NOT NULL
 );
 
-CREATE TABLE address(
-	id SERIAL PRIMARY KEY,
-	user_id INT REFERENCES users(id) NOT NULL,
-	address_name VARCHAR(50),
-	apt VARCHAR(50),
-	address text NOT NULL,
-	area VARCHAR(100),
-	state_name VARCHAR(100),
-	city VARCHAR(100),
-	pincode VARCHAR(50),
-	mobile_no VARCHAR(30) NOT NULL
-)
+CREATE TABLE transactions (
+    id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(id) ON DELETE CASCADE,
+    gateway_txn_id VARCHAR(100) UNIQUE, -- The Stripe Payment Intent ID
+    payment_method VARCHAR(50),       -- 'card', 'upi', 'stripe'
+    amount NUMERIC(10,2) NOT NULL,
+    status VARCHAR(50) NOT NULL,      -- 'succeeded', 'failed', 'pending'
+    gateway_response JSONB,            -- Save the whole Stripe response here just in case!
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
