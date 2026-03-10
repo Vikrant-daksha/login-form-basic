@@ -18,7 +18,7 @@ export function Register(){
     const [password, setPassword] = useState('');
     
     const [showPass, setShowPass] = useState(false)
-    const { setUser } = useAuth()
+    const { login } = useAuth()
     
     const passToggle = () => {
         setShowPass(prev => !prev)
@@ -55,8 +55,7 @@ export function Register(){
             }
             const res = await api.post("api/auth/register", userData);
             if (res.data) {
-                localStorage.setItem("token", res.data);
-                setUser(res.data);
+                await login(res.data);
                 navigate("/");
             } else {
                 console.error("Could Not Register")

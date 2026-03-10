@@ -21,7 +21,7 @@ export function Login(){
 
     const [showPass, setShowPass] = useState(false)
 
-    const { setUser } = useAuth() 
+    const { login } = useAuth() 
 
     const passToggle = () => {
         setShowPass(prev => !prev)
@@ -39,8 +39,7 @@ export function Login(){
             const userData = { identifier: trimUsername, password: password };
             const res = await api.post("/api/auth/login", userData);
             if(res.data) {
-                localStorage.setItem("token", res.data);
-                setUser(res.data);
+                await login(res.data);
                 navigate("/");
             } else {
                 console.error("Could Not Login", res.data)

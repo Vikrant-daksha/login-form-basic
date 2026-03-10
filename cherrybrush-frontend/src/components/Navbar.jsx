@@ -17,29 +17,9 @@ import api from "../api/axiosinstance.jsx";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [accountOverlay, setAccountOverlay] = useState(false);
-  const [userProfile, setUserProfile] = useState([]);
   const navigate = useNavigate();
 
   const { user, logout } = useAuth();
-
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchUserProfile = async () => {
-      try {
-        const res = await api.get("/api/profile");
-        if (!res) {
-          console.log("Error fetching Account");
-          return;
-        }
-        setUserProfile(res.data);
-      } catch (err) {
-        console.log("Error Getting User Profile", err);
-      }
-    };
-
-    fetchUserProfile();
-  }, [user]);
 
   const handleRedirect = async (link) => {
     navigate(`${link}`);
@@ -158,10 +138,10 @@ export function Navbar() {
                               <User2 />
                             </div>
                             <div className="my-2 font-bold">
-                              {userProfile.username}
+                              {user?.username}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {userProfile.email || userProfile.phone_no || ""}
+                              {user?.email || user?.phone_no || ""}
                             </div>
                           </div>
                           <div className="flex justify-start items-center hover:bg-secondary rounded-full">
@@ -305,7 +285,7 @@ export function Navbar() {
                       className="w-full flex items-center py-2.5 px-5 border-b border-white"
                     >
                       <User2 className="mr-2 p-0.5 border border-black rounded-full" />
-                      {userProfile.username}
+                      {user?.username || "Account"}
                     </button>
                   </div>
                   <div className="mb-4">

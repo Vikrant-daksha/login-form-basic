@@ -24,17 +24,23 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  const login = async (token) => {
+    localStorage.setItem("token", token);
+    await checkAuth();
+  };
+
   const logout = async () => {
-    try{
-      const res = await api.post("/api/auth/logout");
+    try {
+      await api.post("/api/auth/logout");
+      localStorage.removeItem("token");
       setUser(null);
     } catch (err) {
       console.error(err);
     }
-  }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, logout }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
