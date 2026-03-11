@@ -33,7 +33,7 @@ export function Navbar() {
   return (
     <>
       <div className="sticky top-0 z-10 w-full leading-none">
-        <nav className="py-1.5 bg-primary">
+        <nav className="py-1.5 bg-black">
           <div className="flex items-center justify-between min-h-14 lg:justify-evenly">
             <div className="text-2xl px-8">
               <Link to="/" className="font-bold">
@@ -265,7 +265,13 @@ export function Navbar() {
               </button>
               <ul className="">
                 <li className="px-5 py-2.5 border-b border-white">
-                  <Link to="/catalog" onClick={() => setIsOpen(false)} className="block w-full">Press On Nails</Link>
+                  <Link
+                    to="/catalog"
+                    onClick={() => setIsOpen(false)}
+                    className="block w-full"
+                  >
+                    Press On Nails
+                  </Link>
                 </li>
                 <li className="px-5 py-2.5 border-b border-white">Custom</li>
                 <li className="px-5 py-2.5 border-b border-white">

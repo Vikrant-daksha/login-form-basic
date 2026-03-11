@@ -1,9 +1,4 @@
-import {
-  Routes,
-  Route,
-  Link,
-  Navigate,
-} from "react-router-dom";
+import { Routes, Route, Link, Navigate } from "react-router-dom";
 import "./App.css";
 import React from "react";
 import { Account } from "./pages/AccountPage";
@@ -28,10 +23,26 @@ import AdminOrders from "./pages/AdminOrders.jsx";
 function App() {
   const { user, loading } = useAuth();
 
-  if (loading) return <p>Loading...</p>;
-
   return (
     <>
+      <div
+        className={
+          loading
+            ? "fixed flex justify-center items-center w-full h-full bg-black z-50"
+            : "fixed flex justify-center items-center w-full h-full bg-black z-50 transition duration-[1500ms] delay-100 ease-out -translate-y-full border-b border-white"
+        }
+      >
+        <div>
+          <img
+            src="/loading.gif"
+            alt="Cherrybrush"
+            className="h-40 w-40 mr-5"
+          />
+        </div>
+        <div className=" text-lg text-white tracking-wider uppercase">
+          WEBSELL STORE
+        </div>
+      </div>
       <Routes>
         <Route element={<Layout />}>
           {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
