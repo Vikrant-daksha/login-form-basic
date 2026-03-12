@@ -249,7 +249,7 @@ export function Account() {
               </div>
               <button
                 onClick={handleLogout}
-                className="mt-6 sm:mt-0 flex items-center justify-center px-6 py-2.5 bg-secondary text-primary hover:text-secondary font-bold rounded-full hover:bg-primary transition-all active:scale-95 shadow-lg"
+                className="mt-6 w-full sm:w-1/4 sm:mt-0 flex items-center justify-center px-6 py-2.5 bg-secondary text-primary hover:text-secondary font-bold rounded-full hover:bg-primary transition-all active:scale-95 shadow-lg"
               >
                 <LuLogOut className="mr-2 h-5 w-5" /> Logout
               </button>

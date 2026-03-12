@@ -233,13 +233,13 @@ export function Navbar() {
             </div>
             <div className="flex items-center">
               <Link to="/cart" className="sm:hidden mr-4 text-xl">
-                <FaCartShopping></FaCartShopping>
+                <FaCartShopping className="text-white" />
               </Link>
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="sm:hidden mr-4 text-2xl p-1.5"
               >
-                <GiHamburgerMenu />
+                <GiHamburgerMenu className="text-white" />
               </button>
             </div>
           </div>
@@ -370,8 +370,16 @@ export function Navbar() {
                   </div>
                 </>
               ) : (
-                <Link to="/login" className="block text-sm py-1.5 px-5 mt-3">
-                  Login
+                <Link
+                  to="/login"
+                  className="block text-sm text-left py-1.5 px-5 mt-3"
+                >
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="w-full h-full text-left"
+                  >
+                    Login
+                  </button>
                 </Link>
               )}
             </div>

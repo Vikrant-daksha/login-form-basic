@@ -1,27 +1,66 @@
 import React, { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/Authcontext.jsx";
 import FullBanner from "../assets/BannerFull.png";
 import HalfBanner from "../assets/BannerHalf.png";
+import prodimg from "../assets/Product-img.webp";
+import robo from "../assets/cyborg.jpeg";
 import PImage from "../assets/Product-img.webp";
 import { FaUser } from "react-icons/fa6";
 import { Carousel } from "../components/Carousel.jsx";
 import { ProductList } from "../components/ProductList.jsx";
 import api from "../api/axiosinstance.jsx";
+import { useState } from "react";
 
 export function Home() {
+  const navigate = useNavigate();
+  const [products, setProducts] = useState(null);
+
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const res = await api.get("/api/products");
+        setProducts(res.data);
+      } catch (err) {
+        console.error("Error Fecthing Products");
+      }
+    };
+
+    getProducts();
+  }, []);
+
   return (
     <>
-      <div id="Hero-Banner" className="relative w-full">
-        <div className="img-wrap h-[80dvh] w-full">
-          <img className="hidden sm:block " src={HalfBanner}></img>
-          <img className="block sm:hidden" src={FullBanner} alt="" />
+      <div
+        id="Hero-Banner"
+        className="relative flex justify-center w-full h-[70vh] overflow-hidden"
+      >
+        <div className="absolute">
+          <img src={robo} className="object-cover h-[70vh]"></img>
         </div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <p className="text-xl font-sans mb-5">Buy from Our Collection</p>
-          <button className="border border-white px-3 py-1 rounded-sm">
-            Collections
-          </button>
+        {/* <div className="absolute text-8xl text-black stroke-white stroke-[10px] bg-transparent">
+          WEBSELL STORE
+        </div> */}
+        <div
+          id="slider"
+          className="absolute text-center sm:w-[150px] sm:h-[150px] h-[100px] w-[100px] top-[30%] left-[calc(50%-100px)] [transform-style:preserve-3d] translate-y-20 sm:translate-y-36 animate-rotate"
+        >
+          {products?.map((products, i) => (
+            <button
+              key={i}
+              onClick={() => navigate("/catalog")}
+              className="w-full h-full absolute inset-0"
+              style={{
+                transform: `rotateY(${(i * 360) / 6}deg) translateZ(400px)`,
+              }}
+            >
+              <img
+                src={products?.images?.[0]}
+                alt={`item-${i + 1}`}
+                className="object-cover w-full h-full"
+              />
+            </button>
+          ))}
         </div>
       </div>
       <div className="my-8 text-center sm:my-10">

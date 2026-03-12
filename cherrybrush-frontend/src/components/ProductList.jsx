@@ -5,14 +5,18 @@ import { FaCartPlus, FaHeart } from "react-icons/fa";
 import { FaCartShopping } from "react-icons/fa6";
 import { href, Link } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { useAuth } from "../context/Authcontext";
 
 export function ProductList({ amt, layout, page = "" }) {
+  const { user } = useAuth();
+
   const [productList, setProductList] = useState([]);
   const [cart, setCart] = useState([]);
   const [pageName, setPageName] = useState("");
   const [sortBy, setSortBy] = useState("");
 
   const addToCart = async (productId) => {
+    if (!user) return alert("Login To Add to Cart");
     try {
       const productItem = {
         product_id: productId,
@@ -27,17 +31,10 @@ export function ProductList({ amt, layout, page = "" }) {
       console.error("error", err);
     }
   };
-  // async function addToCart(productId) {
-  //   try {
-  //     const productItem = { product_id: productId, quantity: 1 };
-  //     const res = await api.post("/api/add-to-cart/", productItem);
-  //   } catch (err) {
-  //     console.error("error", err);
-  //   }
-  // }
 
   useEffect(() => {
     const fetchCart = async () => {
+      if (!user) return;
       try {
         const res = await api.get("/api/auth/cart");
         if (!res.data) {
@@ -63,21 +60,6 @@ export function ProductList({ amt, layout, page = "" }) {
   }, [cart]);
 
   useEffect(() => {
-    // const getProductList = async () => {
-    //     try {
-    //         const res = await api.get("/product");
-
-    //         const response = res.data.response;
-
-    //         setProductList(response);
-    //         localStorage.setItem("products", JSON.stringify(response));
-    //     } catch (err) {
-    //         console.error("API error:", api, err);
-    //     }
-    // };
-
-    // getProductList();
-
     const getProducts = async () => {
       try {
         const res = await api.get("/api/products");
@@ -106,10 +88,6 @@ export function ProductList({ amt, layout, page = "" }) {
   }, [productList, sortBy]);
 
   const itemsToRender = sortedProducts.slice(amt);
-
-  // useEffect(() => {
-  //     console.log(productList)
-  // }, [productList])
 
   return (
     <>

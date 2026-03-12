@@ -3,8 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/axiosinstance";
 import { FaHeart } from "react-icons/fa";
 import { TbTrash } from "react-icons/tb";
+import { useAuth } from "../context/Authcontext";
 
 export function ProductDetails() {
+  const { user } = useAuth();
+
   const { slug } = useParams(); // Access the dynamic parameter
   const [prod, setProd] = useState(null);
   const [variants, setVariants] = useState([]);
@@ -23,6 +26,7 @@ export function ProductDetails() {
 
   useEffect(() => {
     const fetchCart = async () => {
+      if (!user) return;
       try {
         const res = await api.get("/api/auth/cart");
         if (!res.data) {
@@ -96,6 +100,7 @@ export function ProductDetails() {
   };
 
   const handleCheckout = async () => {
+    if (!user) return;
     if (!cartItemsId) {
       alert("Add To Cart First!!!");
     } else {
@@ -104,6 +109,7 @@ export function ProductDetails() {
   };
 
   useEffect(() => {
+    if (!user) return;
     if (cart) {
       const product = cart?.find((c) => c.product_id === prod?.product_id);
       if (product) {
@@ -114,6 +120,7 @@ export function ProductDetails() {
   }, [cart]);
 
   const removeFromCart = async (productId) => {
+    if (!user) return;
     if (cartItemsId) {
       const res = await api.delete(`/api/remove/${cartItemsId}`);
 
@@ -125,10 +132,13 @@ export function ProductDetails() {
   };
 
   const handleLocalChange = () => {
+    if (!user) return alert("Login To Add to Cart");
+
     setProductQuantity((pq) => Number(pq) + 1);
   };
 
   const addToCart = async (productId) => {
+    if (!user) return;
     try {
       let productItem = {
         product_id: productId,
