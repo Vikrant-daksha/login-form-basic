@@ -1,25 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import api from "../api/axiosinstance";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaUser } from "react-icons/fa";
 import { TbTrash } from "react-icons/tb";
 import { useAuth } from "../context/Authcontext";
+import { IconSlider } from "../components/Carousel";
+import { ProductList } from "../components/ProductList";
 
 export function ProductDetails() {
   const { user } = useAuth();
 
-  const { slug } = useParams(); // Access the dynamic parameter
+  const { slug } = useParams();
   const [prod, setProd] = useState(null);
   const [variants, setVariants] = useState([]);
   const [selectedImg, setSelectedImg] = useState(null);
   const [cart, setCart] = useState([]);
   const [productQuantity, setProductQuantity] = useState(0);
+  const [addCommentPopup, setAddCommentPopup] = useState(false);
 
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedShape, setSelectedShape] = useState("");
   const [seletedVariant, setSelectedVariant] = useState(null);
   const [cartItemsId, setCartItemsId] = useState(null);
+
+  const [productComments, setProductComments] = useState(null);
+  const [title, setTitle] = useState(null);
+  const [rating, setRating] = useState(null);
+  const [comment, setComment] = useState(null);
   const navigate = useNavigate();
 
   const SORT_SIZE = ["XS", "S", "M", "L", "XL", "XXL", "CUSTOM"];
@@ -40,13 +48,12 @@ export function ProductDetails() {
     };
 
     fetchCart();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    const getProducts = async () => {
+    const getProduct = async () => {
       try {
         const res = await api.get(`/api/products/${slug}`);
-        console.log(res.data.product);
         setProd(res.data.product);
         setVariants(res.data.variant);
       } catch (err) {
@@ -54,8 +61,24 @@ export function ProductDetails() {
       }
     };
 
-    getProducts();
-  }, []);
+    getProduct();
+  }, [slug]);
+
+  useEffect(() => {
+    if (!prod) return;
+
+    const getComments = async () => {
+      try {
+        const res = await api.get(`/api/auth/get-comments/${prod.product_id}`);
+        setProductComments(res.data);
+        console.log(res.data);
+      } catch (err) {
+        console.error("Error Getting Comments");
+      }
+    };
+
+    getComments();
+  }, [prod]);
 
   useEffect(() => {
     if (prod?.images?.length) {
@@ -63,10 +86,6 @@ export function ProductDetails() {
         prod.images[0].replace("/upload/", "/upload/w_900,h_900,c_fill/")
       );
     }
-  }, [prod]);
-
-  useEffect(() => {
-    console.log("Backend", prod);
   }, [prod]);
 
   const colors = [...new Set(variants?.map((v) => v.color))];
@@ -103,18 +122,52 @@ export function ProductDetails() {
     if (!user) return;
     if (!cartItemsId) {
       alert("Add To Cart First!!!");
-    } else {
+      return;
+    }
+    if (productQuantity > 0) {
       navigate(`/checkout?productId=${cartItemsId}`);
     }
+  };
+
+  const handleComment = async (product_id) => {
+    if (!user) return;
+    if (!title || !comment || !rating) {
+      alert("Field Cannot be Empty.");
+      return;
+    }
+
+    const commentData = {
+      productId: product_id,
+      title: title,
+      rating: rating,
+      comment: comment,
+    };
+
+    const res = await api.post("/api/auth/post-comment", commentData);
+    console.log(res.data);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   useEffect(() => {
     if (!user) return;
     if (cart) {
       const product = cart?.find((c) => c.product_id === prod?.product_id);
-      if (product) {
+      const cartId = cart?.find((c) => {
+        if (c.product_id === prod?.product_id) return c.cart_items_id;
+      });
+      if (product && cartId) {
         const { quantity } = product;
+        const { cart_items_id } = cartId;
         setProductQuantity(quantity);
+        setCartItemsId(cart_items_id);
+        console.log(cart_items_id);
       }
     }
   }, [cart]);
@@ -126,12 +179,13 @@ export function ProductDetails() {
 
       setCart((cart) => cart.filter((item) => item.product_id !== productId));
       setProductQuantity(0);
+      setCartItemsId(null);
 
       console.log(res.data);
     }
   };
 
-  const handleLocalChange = () => {
+  const handleLocalChange = (pq) => {
     if (!user) return alert("Login To Add to Cart");
 
     setProductQuantity((pq) => Number(pq) + 1);
@@ -164,8 +218,8 @@ export function ProductDetails() {
     <>
       <div className="w-full py-6">
         <div>
-          <div className="w-full grid grid-cols-1 px-6 md:grid-cols-2 md:px-12">
-            <div className="w-full flex justify-center top-24 h-min md:sticky md:pr-5">
+          <div className="grid grid-cols-1 px-6 pb-20 border-b md:grid-cols-2 md:mx-12">
+            <div className="w-full flex justify-center top-24 h-min mb-5 md:sticky md:pr-5 md:mb-0">
               <ul className="min-w-10 pr-2">
                 {prod?.images?.map((img, i) => (
                   <li
@@ -191,7 +245,7 @@ export function ProductDetails() {
                 )}
               </div>
             </div>
-            <div className="px-4 mr-auto">
+            <div className="px-4 w-full md:w-fit md:mr-auto">
               <div className="mb-5 pb-3 border-b border-gray-400">
                 <h1 className="uppercase text-[20px] pb-2">{prod.product}</h1>
                 <div className="py-1 hidden">Tags</div>
@@ -262,7 +316,7 @@ export function ProductDetails() {
                   )}
                 </>
               )}
-              <div>
+              <div className="max-w-full">
                 <div
                   className={
                     productQuantity > 0
@@ -333,12 +387,12 @@ export function ProductDetails() {
                   Quick-change gel tabs + brush-on glue in every box.
                 </p>
                 <br></br>
-                <details className="border-x border-t">
+                <details className="border-x border-t w-">
                   <summary className="py-2 cursor-pointer font-semibold list-none text-center">
                     Support
                   </summary>
                   <div className="border-b border mx-4"></div>
-                  <div className="text-sm font-extralight px-4 py-4">
+                  <div className="text-sm font-extralight px-4 py-4 w-full">
                     <p className="mb-4">
                       Our award-winning Cherrybrush Press Ons were created at
                       the iconic Paintbox studio in India — designed by the
@@ -414,6 +468,111 @@ export function ProductDetails() {
                 </details>
               </div>
             </div>
+          </div>
+          <div className="my-5 sm:my-8 md:mx-40 px-5">
+            <h1 className="text-xl">Explore:</h1>
+          </div>
+          <div
+            id="Product-List"
+            className=" flex flex-col h-auto px-5 overflow-x-scroll overflow-auto scrollbar-hide md:mx-40"
+          >
+            <IconSlider>
+              <ProductList amt={5} layout={"flex"} />
+            </IconSlider>
+          </div>
+          <div className=" my-5 md:my-8 md:mx-40 px-5">
+            Product Reviews
+            {addCommentPopup && (
+              <div className="border border-black">
+                <div>
+                  <label>Title</label>
+                  <input
+                    onChange={(e) => setTitle(e.target.value)}
+                    type="text"
+                    placeholder="title"
+                  ></input>
+                  <label>Rating</label>
+                  <input
+                    onChange={(e) => setRating(e.target.value)}
+                    type="text"
+                    placeholder="rating"
+                  ></input>
+                  <label>Comment</label>
+                  <input
+                    onChange={(e) => setComment(e.target.value)}
+                    type="text"
+                    placeholder="comment"
+                  ></input>
+                  <button onClick={() => handleComment(prod?.product_id)}>
+                    Add Comment
+                  </button>
+                </div>
+              </div>
+            )}
+            <button
+              onClick={() =>
+                addCommentPopup
+                  ? setAddCommentPopup(false)
+                  : setAddCommentPopup(true)
+              }
+            >
+              Add Review
+            </button>
+            {productComments && (
+              <div className="grid grid-cols-1 gap-3 ">
+                {productComments?.map((comment, i) => (
+                  <div key={i}>
+                    <div
+                      id="Comment"
+                      key={i}
+                      className="border px-4.5 py-4 overflow-hidden"
+                    >
+                      <div className="mb-4 flex sm:flex justify-between">
+                        <div id="Stars" className="font-bold">
+                          {comment.rating} / 5
+                        </div>
+                        <div id="date" className="font-extralight text-gray">
+                          {formatDate(comment.comment_date)}
+                        </div>
+                      </div>
+                      <div className="mb-6">
+                        <p id="Subject / order" className="font-semibold mb-3">
+                          {comment.title}
+                        </p>
+                        <p id="Content" className="font-light text-wrap h-fit">
+                          {comment.comment}
+                        </p>
+                      </div>
+                      <div className="border-t pt-3 flex justify-between items-center">
+                        <div className="flex text-sm">
+                          <div
+                            id="User-profile"
+                            className="h-10 w-10 flex shrink-0 border rounded-full p-3 items-center mr-3"
+                          >
+                            <FaUser />
+                          </div>
+                          <div className="flex flex-col truncate">
+                            <a className="">{comment.user}</a>
+                            <a className="text-left font-light">
+                              {comment.product_name}
+                            </a>
+                          </div>
+                        </div>
+                        <div className="shrink-0 link-img">
+                          <Link to={`/products/${comment.product_slug}`}>
+                            <img
+                              src={comment.product_images?.[0]}
+                              width={40}
+                              height={40}
+                            ></img>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

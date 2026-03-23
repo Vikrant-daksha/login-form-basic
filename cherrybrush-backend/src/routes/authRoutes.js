@@ -126,4 +126,14 @@ router.post(
   authController.addShape
 );
 
+router.post(
+  "/post-comment",
+  authMiddleware.loginRequire,
+  authController.createComment
+);
+
+router.get("/get-comments/:productId", authController.getComments);
+
+router.get("/all-comments/", authController.getAllComments);
+
 export default router;

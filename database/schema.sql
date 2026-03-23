@@ -783,7 +783,7 @@ ALTER TABLE ONLY public.order_items
 --
 
 ALTER TABLE ONLY public.order_items
-    ADD CONSTRAINT order_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(product_id);
+    ADD CONSTRAINT order_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(product_id) ON DELETE SET NULL;
 
 
 --
@@ -791,7 +791,7 @@ ALTER TABLE ONLY public.order_items
 --
 
 ALTER TABLE ONLY public.order_items
-    ADD CONSTRAINT order_items_variant_id_fkey FOREIGN KEY (variant_id) REFERENCES public.product_variants(id);
+    ADD CONSTRAINT order_items_variant_id_fkey FOREIGN KEY (variant_id) REFERENCES public.product_variants(id) ON DELETE SET NULL;
 
 
 --
@@ -849,192 +849,11 @@ ALTER TABLE ONLY public.product_variants
 ALTER TABLE ONLY public.transactions
     ADD CONSTRAINT transactions_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
 
-
---
--- Name: TABLE address; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.address TO cbrush;
-
-
---
--- Name: SEQUENCE address_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.address_id_seq TO cbrush;
-
-
---
--- Name: TABLE cart_items; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.cart_items TO cbrush;
-
-
---
--- Name: SEQUENCE cart_items_cart_items_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.cart_items_cart_items_id_seq TO cbrush;
-
-
---
--- Name: TABLE carts; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.carts TO cbrush;
-
-
---
--- Name: SEQUENCE carts_cart_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.carts_cart_id_seq TO cbrush;
-
-
---
--- Name: TABLE colors; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.colors TO cbrush;
-
-
---
--- Name: SEQUENCE colors_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.colors_id_seq TO cbrush;
-
-
---
--- Name: TABLE order_items; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.order_items TO cbrush;
-
-
---
--- Name: SEQUENCE order_items_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.order_items_id_seq TO cbrush;
-
-
---
--- Name: TABLE orders; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.orders TO cbrush;
-
-
---
--- Name: SEQUENCE orders_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.orders_id_seq TO cbrush;
-
-
---
--- Name: TABLE product_variants; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.product_variants TO cbrush;
-
-
---
--- Name: SEQUENCE product_variants_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.product_variants_id_seq TO cbrush;
-
-
---
--- Name: TABLE products; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.products TO cbrush;
-
-
---
--- Name: SEQUENCE products_product_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.products_product_id_seq TO cbrush;
-
-
---
--- Name: TABLE shapes; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.shapes TO cbrush;
-
-
---
--- Name: SEQUENCE shapes_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.shapes_id_seq TO cbrush;
-
-
---
--- Name: TABLE sizes; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.sizes TO cbrush;
-
-
---
--- Name: SEQUENCE sizes_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.sizes_id_seq TO cbrush;
-
-
---
--- Name: TABLE transactions; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.transactions TO cbrush;
-
-
---
--- Name: SEQUENCE transactions_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.transactions_id_seq TO cbrush;
-
-
---
--- Name: TABLE users; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT ALL ON TABLE public.users TO cbrush;
-
-
---
--- Name: SEQUENCE users_id_seq; Type: ACL; Schema: public; Owner: postgres
---
-
-GRANT SELECT,USAGE ON SEQUENCE public.users_id_seq TO cbrush;
-
-
---
--- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: postgres
---
-
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,USAGE ON SEQUENCES TO cbrush;
-
-
---
--- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: postgres
---
-
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO cbrush;
-
-
---
--- PostgreSQL database dump complete
---
-
-\unrestrict IbFXVT9pWCTPc4wFPeizUM98QJV8nEct6VNK4Xlp7xE97raiTXCtRhv9Uxgvo9H
-
+CREATE TABLE comments(
+    id SERIAL PRIMARY KEY NOT NULL,
+    user_id INT REFERENCES users(id) NOT NULL,
+    product_id INT REFERENCES products(product_id) NOT NULL,
+    comment TEXT NOT NULL,
+    rating NUMERIC(2,1),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+)

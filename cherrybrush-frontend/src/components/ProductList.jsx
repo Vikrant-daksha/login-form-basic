@@ -53,7 +53,7 @@ export function ProductList({ amt, layout, page = "" }) {
     };
 
     fetchCart();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     console.log(cart);
@@ -87,7 +87,12 @@ export function ProductList({ amt, layout, page = "" }) {
     });
   }, [productList, sortBy]);
 
-  const itemsToRender = sortedProducts.slice(amt);
+  let itemsToRender;
+  if (amt && amt > 0) {
+    itemsToRender = sortedProducts.slice(0, amt);
+  } else {
+    itemsToRender = sortedProducts.slice(amt);
+  }
 
   return (
     <>

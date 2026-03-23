@@ -7,7 +7,7 @@ import prodimg from "../assets/Product-img.webp";
 import robo from "../assets/cyborg.jpeg";
 import PImage from "../assets/Product-img.webp";
 import { FaUser } from "react-icons/fa6";
-import { Carousel } from "../components/Carousel.jsx";
+import { IconSlider } from "../components/Carousel.jsx";
 import { ProductList } from "../components/ProductList.jsx";
 import api from "../api/axiosinstance.jsx";
 import { useState } from "react";
@@ -15,6 +15,24 @@ import { useState } from "react";
 export function Home() {
   const navigate = useNavigate();
   const [products, setProducts] = useState(null);
+  const [productComments, setProductComments] = useState(null);
+
+  const [radius, setRadius] = useState(window.innerWidth < 640 ? 200 : 400);
+  const [items, setItems] = useState(window.innerWidth < 640 ? 4 : 10);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const handleRedirect = (slug) => {
+    console.log(slug);
+    if (!slug) return;
+    navigate(`/products/${slug}`);
+  };
 
   useEffect(() => {
     const getProducts = async () => {
@@ -27,7 +45,31 @@ export function Home() {
     };
 
     getProducts();
+
+    const handleResize = () => {
+      setRadius(window.innerWidth < 640 ? 200 : 400);
+      setItems(window.innerWidth < 640 ? 4 : 10);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!products) return;
+
+    const getComments = async () => {
+      try {
+        const res = await api.get(`/api/auth/all-comments/`);
+        setProductComments(res.data);
+        console.log(res.data);
+      } catch (err) {
+        console.error("Error Getting Comments");
+      }
+    };
+
+    getComments();
+  }, [products]);
 
   return (
     <>
@@ -43,15 +85,17 @@ export function Home() {
         </div> */}
         <div
           id="slider"
-          className="absolute text-center sm:w-[150px] sm:h-[150px] h-[100px] w-[100px] top-[30%] left-[calc(50%-100px)] [transform-style:preserve-3d] translate-y-20 sm:translate-y-36 animate-rotate"
+          className="absolute text-center sm:w-[150px] sm:h-[150px] h-[200px] w-[200px] top-[30%] left-[calc(50%-100px)] [transform-style:preserve-3d] translate-y-20 sm:translate-y-36 animate-rotate"
         >
           {products?.map((products, i) => (
             <button
               key={i}
-              onClick={() => navigate("/catalog")}
-              className="w-full h-full absolute inset-0"
+              onClick={() => handleRedirect(products?.slug)}
+              className="w-full h-full absolute inset-0 cursor-pointer"
               style={{
-                transform: `rotateY(${(i * 360) / 6}deg) translateZ(400px)`,
+                transform: `rotateY(${
+                  (i * 360) / items
+                }deg) translateZ(${radius}px)`,
               }}
             >
               <img
@@ -63,16 +107,16 @@ export function Home() {
           ))}
         </div>
       </div>
-      <div className="my-8 text-center sm:my-10">
+      <div className="my-5 sm:my-8 md:mx-40 px-5">
         <h1 className="text-xl">Explore: Press Ons</h1>
       </div>
       <div
         id="Product-List"
-        className="w-flex flex-col h-auto px-3 overflow-x-scroll overflow-auto scrollbar-hide md:mx-40"
+        className=" flex flex-col h-auto px-5 overflow-x-scroll overflow-auto scrollbar-hide md:mx-40"
       >
-        <Carousel speed={0.5}>
+        <IconSlider>
           <ProductList amt={0} layout={"flex"} />
-        </Carousel>
+        </IconSlider>
       </div>
       <div id="Comments" className="mt-16 mb-12 px-6">
         <div className="mt-12 mb-8  text-center">
@@ -82,125 +126,64 @@ export function Home() {
           </p>
           <p className="text-[12px] font-light">Overall Reviews</p>
         </div>
-        <div
-          id="Comment-slider"
-          className="grid gap-4 grid-cols-1 md:grid-cols-3 overflow-x-hidden "
-        >
-          <div id="Comment" className="border px-4.5 py-4 overflow-hidden">
-            <div className="mb-4 flex sm:flex justify-between">
-              <div id="Stars" className="font-bold">
-                4.5
-              </div>
-              <div id="date" className="font-extralight text-gray">
-                23/04/05
-              </div>
-            </div>
-            <div className="mb-6">
-              <p id="Subject / order" className="font-semibold mb-3">
-                Love
-              </p>
-              <p id="Content" className="font-light text-wrap">
-                I have ordered blah with a little bit of bleh and got a bluh
-                like the shit they doin
-              </p>
-            </div>
-            <div className="border-t pt-3 flex justify-between items-center">
-              <div className="flex text-sm">
+        {productComments && (
+          <div
+            id="Comment-slider"
+            className="grid gap-4 grid-cols-1 md:grid-cols-3 overflow-x-hidden "
+          >
+            {productComments?.map((comment, i) => (
+              <div key={i}>
                 <div
-                  id="User-profile"
-                  className="h-10 w-10 flex shrink-0 border rounded-full p-3 items-center mr-3"
+                  id="Comment"
+                  key={i}
+                  className="border px-4.5 py-4 overflow-hidden"
                 >
-                  <FaUser />
-                </div>
-                <div className="flex flex-col truncate">
-                  <a className="">Clair Obsecure</a>
-                  <a className="text-left">Expedition 33</a>
+                  <div className="mb-4 flex sm:flex justify-between">
+                    <div id="Stars" className="font-bold">
+                      {comment.rating} / 5
+                    </div>
+                    <div id="date" className="font-extralight text-gray">
+                      {formatDate(comment.comment_date)}
+                    </div>
+                  </div>
+                  <div className="mb-6">
+                    <p id="Subject / order" className="font-semibold mb-3">
+                      {comment.title}
+                    </p>
+                    <p id="Content" className="font-light text-wrap h-fit">
+                      {comment.comment}
+                    </p>
+                  </div>
+                  <div className="border-t pt-3 flex justify-between items-center">
+                    <div className="flex text-sm">
+                      <div
+                        id="User-profile"
+                        className="h-10 w-10 flex shrink-0 border rounded-full p-3 items-center mr-3"
+                      >
+                        <FaUser />
+                      </div>
+                      <div className="flex flex-col truncate">
+                        <a className="">{comment.user}</a>
+                        <a className="text-left font-light">
+                          {comment.product_name}
+                        </a>
+                      </div>
+                    </div>
+                    <div className="shrink-0 link-img">
+                      <Link to={`/products/${comment.product_slug}`}>
+                        <img
+                          src={comment.product_images?.[0]}
+                          width={40}
+                          height={40}
+                        ></img>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="shrink-0 link-img">
-                <Link to={"/catalog"}>
-                  <img src={PImage} width={40} height={40}></img>
-                </Link>
-              </div>
-            </div>
+            ))}
           </div>
-          <div id="Comment" className="border px-4.5 py-4 overflow-hidden">
-            <div className="mb-4 flex sm:flex justify-between">
-              <div id="Stars" className="font-bold">
-                4.5
-              </div>
-              <div id="date" className="font-extralight text-gray">
-                23/04/05
-              </div>
-            </div>
-            <div className="mb-6">
-              <p id="Subject / order" className="font-semibold mb-3">
-                Love
-              </p>
-              <p id="Content" className="font-light text-wrap">
-                I have ordered blah with a little bit of bleh and got a bluh
-                like the shit they doin
-              </p>
-            </div>
-            <div className="border-t pt-3 flex justify-between items-center">
-              <div className="flex text-sm">
-                <div
-                  id="User-profile"
-                  className="h-10 w-10 flex shrink-0 border rounded-full p-3 items-center mr-3"
-                >
-                  <FaUser />
-                </div>
-                <div className="flex flex-col truncate">
-                  <a className="">Clair Obsecure</a>
-                  <a className="text-left">Expedition 33</a>
-                </div>
-              </div>
-              <div className="shrink-0 link-img">
-                <Link to={"/catalog"}>
-                  <img src={PImage} width={40} height={40}></img>
-                </Link>
-              </div>
-            </div>
-          </div>
-          <div id="Comment" className="border px-4.5 py-4 overflow-hidden">
-            <div className="mb-4 flex sm:flex justify-between">
-              <div id="Stars" className="font-bold">
-                4.5
-              </div>
-              <div id="date" className="font-extralight text-gray">
-                23/04/05
-              </div>
-            </div>
-            <div className="mb-6">
-              <p id="Subject / order" className="font-semibold mb-3">
-                Love
-              </p>
-              <p id="Content" className="font-light text-wrap">
-                I have ordered blah with a little bit of bleh and got a bluh
-                like the shit they doin
-              </p>
-            </div>
-            <div className="border-t pt-3 flex justify-between items-center">
-              <div className="flex text-sm">
-                <div
-                  id="User-profile"
-                  className="h-10 w-10 flex shrink-0 border rounded-full p-3 items-center mr-3"
-                >
-                  <FaUser />
-                </div>
-                <div className="flex flex-col truncate">
-                  <a className="">Clair Obsecure</a>
-                  <a className="text-left">Expedition 33</a>
-                </div>
-              </div>
-              <div className="shrink-0 link-img">
-                <Link to={"/catalog"}>
-                  <img src={PImage} width={40} height={40}></img>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
       <div className="bg-pink-200 py-16 px-10 text-center text-[16px] xl:px-40">
         <div className="py-7 text-[12px]">MEET CHERRYBRUSH</div>

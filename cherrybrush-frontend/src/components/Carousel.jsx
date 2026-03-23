@@ -1,62 +1,53 @@
-import React from "react";
-import { useRef, useState, useEffect } from "react";
+import React, { useRef } from "react";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 
-export function Carousel({ children, speed = 0.5 }) {
-      const trackRef = useRef(null);
-      const [thumbWidth, setThumbWidth] = useState(0);
-      const [thumbLeft, setThumbLeft] = useState(0);
-    
-      useEffect(() => {
-        const el = trackRef.current;
-        if (!el) return;
-    
-        let rafId;
-    
-        const update = () => {
-          const visible = el.clientWidth;
-          const total = el.scrollWidth;
-          const maxScroll = total - visible;
-    
-          // move automatically
-          el.scrollLeft += speed;
-    
-          // loop back to start
-          if (el.scrollLeft >= maxScroll) {
-            el.scrollLeft = 0;
-          }
-    
-          // update thumb
-          setThumbWidth((visible / total) * 100);
-          setThumbLeft((el.scrollLeft / total) * 100);
-    
-          rafId = requestAnimationFrame(update);
-        };
-    
-        rafId = requestAnimationFrame(update);
-    
-        return () => cancelAnimationFrame(rafId);
-      }, [speed]);
-    
-      return (
-        <div className="w-full">
-          {/* auto-scrolling content */}
-          <div
-            ref={trackRef}
-            className="flex overflow-x-hidden"
-          >
-            {children}
-          </div>
-    
-          {/* custom scrollbar */}
-          <div className="relative left-1/4 mt-3 h-1 w-1/2 bg-neutral-200 rounded-full">
-            <div
-              className="absolute h-full bg-black rounded-full"
-              style={{
-                width: `${thumbWidth}%`,
-                left: `${thumbLeft}%`,
-              }}
-            />
-          </div>
-        </div>
-      );
+export function IconSlider({ children }) {
+  const sliderRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (sliderRef.current) {
+      // Get the width of a single item (first child)
+      const itemWidth = sliderRef.current.children[0]?.offsetWidth || 0;
+      // Add the gap/margin if any (e.g., gap-4 is 16px)
+      const gap = 16;
+
+      const scrollAmount =
+        direction === "left" ? -(itemWidth + gap) : itemWidth + gap;
+
+      sliderRef.current.scrollBy({
+        left: scrollAmount,
+        behavior: "smooth",
+      });
     }
+  };
+
+  return (
+    <div className="relative group w-full">
+      {/* Navigation Icons */}
+      <button
+        onClick={() => scroll("left")}
+        className="absolute left-[-20px] top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg border border-neutral-100 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-black hover:text-white"
+      >
+        <FaChevronLeft size={20} />
+      </button>
+
+      <button
+        onClick={() => scroll("right")}
+        className="absolute right-[-20px] top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg border border-neutral-100 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-black hover:text-white"
+      >
+        <FaChevronRight size={20} />
+      </button>
+
+      {/* Scrollable Container */}
+      <div
+        ref={sliderRef}
+        className="flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide px-2"
+        style={{ scrollSnapType: "x mandatory" }}
+      >
+        {React.Children.map(children, (child) => (
+          <div className="flex scroll-snap-align-start">{child}</div>
+        ))}
+      </div>
+    </div>
+  );
+}

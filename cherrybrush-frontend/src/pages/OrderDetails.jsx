@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/axiosinstance";
+import { CgUnavailable } from "react-icons/cg";
 import "./OrderDetails.css";
 
 function OrderDetails() {
@@ -90,11 +91,23 @@ function OrderDetails() {
             <div className="order-items-list">
               {order.map((item, index) => (
                 <div key={index} className="order-item-card">
-                  <img
+                  {item.image ? (
+                    <img
+                      src={item.image && item.image[0]}
+                      alt={item.name}
+                      className="item-image"
+                    />
+                  ) : (
+                    <div className="h-[100px] w-[100px] rounded-[8px] border flex flex-col justify-center items-center text-gray-300">
+                      <CgUnavailable className="text-5xl" />
+                      <p className="text-[12px] text-center">Not Available</p>
+                    </div>
+                  )}
+                  {/* <img
                     src={item.image && item.image[0]}
                     alt={item.name}
                     className="item-image"
-                  />
+                  /> */}
                   <div className="item-details">
                     <p className="item-name">{item.name}</p>
                     <div className="item-meta">

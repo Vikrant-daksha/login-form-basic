@@ -61,7 +61,6 @@ function Checkout() {
     } catch (err) {
       console.error("Error", err);
     }
-    // Create a Checkout Session
   }, [productData]);
 
   const options = { fetchClientSecret };
@@ -174,7 +173,7 @@ function Checkout() {
     let isCancelled = false;
 
     const pollPayment = async () => {
-      const maxRetries = 10; // stop after 10 attempts (50 seconds)
+      const maxRetries = 10;
       let attempt = 0;
 
       while (attempt < maxRetries && !isCancelled) {

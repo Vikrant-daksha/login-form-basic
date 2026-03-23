@@ -476,8 +476,8 @@ export const orderByOrderId = async (user_id, order_id, role = "user") => {
       u.email AS user_email
     FROM orders odr
     JOIN order_items oi ON odr.id = oi.order_id
-    JOIN products pi ON oi.product_id = pi.product_id
     JOIN address ads ON odr.address_id = ads.id
+    LEFT JOIN products pi ON oi.product_id = pi.product_id
     LEFT JOIN transactions txn ON odr.id = txn.order_id
     JOIN users u ON odr.user_id = u.id
     WHERE odr.id = $1`;
@@ -627,6 +627,62 @@ export const deleteOrder = async (user_id, order_id) => {
     DELETE FROM orders WHERE user_id = $1 AND id = $2 RETURNING *
     `,
     [user_id, order_id]
+  );
+
+  return rows;
+};
+
+export const createComment = async (user_id, comment_content) => {
+  const { productId, title, comment, rating } = comment_content;
+
+  const { rows } = await query(
+    `
+    INSERT INTO comments(user_id, product_id, title, comment, rating, created_at)
+    VALUES($1, $2, $3, $4, $5, NOW()) RETURNING *
+    `,
+    [user_id, productId, title, comment, rating]
+  );
+
+  return rows[0];
+};
+
+export const getCommentsForProduct = async (product_id) => {
+  const { rows } = await query(
+    `SELECT 
+      cm.title AS title,
+      cm.comment AS comment,
+      cm.rating AS rating,
+      cm.created_at AS comment_date,
+      usr.username AS user,
+      prd.product AS product_name,
+      prd.images AS product_images,
+      prd.slug AS product_slug
+    FROM comments cm
+    JOIN users usr ON cm.user_id = usr.id
+    LEFT JOIN products prd ON cm.product_id = prd.product_id
+    WHERE cm.product_id = $1`,
+    [product_id]
+  );
+
+  return rows;
+};
+
+export const getAllComment = async () => {
+  const { rows } = await query(
+    `SELECT 
+      cm.title AS title,
+      cm.comment AS comment,
+      cm.rating AS rating,
+      cm.created_at AS comment_date,
+      usr.username AS user,
+      prd.product AS product_name,
+      prd.images AS product_images,
+      prd.slug AS product_slug
+    FROM comments cm
+    JOIN users usr ON cm.user_id = usr.id
+    LEFT JOIN products prd ON cm.product_id = prd.product_id
+    `,
+    []
   );
 
   return rows;

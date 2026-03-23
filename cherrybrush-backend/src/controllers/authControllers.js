@@ -390,3 +390,36 @@ export const addSize = async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 };
+
+export const createComment = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const commentData = req.body;
+    const comment = await authService.createComment(user_id, commentData);
+    res.status(200).json(comment);
+  } catch (err) {
+    console.log("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const getComments = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const comments = await authService.getCommentsForProduct(productId);
+    res.status(200).json(comments);
+  } catch (err) {
+    console.log("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const getAllComments = async (req, res) => {
+  try {
+    const comments = await authService.getAllComment();
+    res.status(200).json(comments);
+  } catch (err) {
+    console.log("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
