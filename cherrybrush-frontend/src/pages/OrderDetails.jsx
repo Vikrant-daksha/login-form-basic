@@ -82,6 +82,12 @@ function OrderDetails() {
                 <label>Total Amount</label>
                 <p>₹{parseFloat(commonInfo.total_amount).toLocaleString()}</p>
               </div>
+              {commonInfo.discount > 0 && (
+                <div className="info-item">
+                  <label>Discount Applied</label>
+                  <p className="text-green-600">-₹{parseFloat(commonInfo.discount).toLocaleString()}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -127,11 +133,29 @@ function OrderDetails() {
               ))}
             </div>
 
-            <div className="order-summary-total">
-              <span className="total-label">Grand Total:</span>
-              <span className="total-amount">
-                ₹{parseFloat(commonInfo.total_amount).toLocaleString()}
-              </span>
+            <div className="order-summary-total flex flex-col gap-2">
+              <div className="flex justify-between w-full">
+                <span className="total-label">Subtotal:</span>
+                <span className="total-amount">
+                  ₹{(parseFloat(commonInfo.total_amount) + parseFloat(commonInfo.discount || 0)).toLocaleString()}
+                </span>
+              </div>
+              
+              {commonInfo.discount > 0 && (
+                <div className="flex justify-between w-full text-green-600">
+                  <span className="total-label">Discount:</span>
+                  <span className="total-amount">
+                    -₹{parseFloat(commonInfo.discount).toLocaleString()}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex justify-between w-full mt-2 pt-2 border-t font-bold">
+                <span className="total-label">Grand Total:</span>
+                <span className="total-amount">
+                  ₹{parseFloat(commonInfo.total_amount).toLocaleString()}
+                </span>
+              </div>
             </div>
           </div>
         </div>

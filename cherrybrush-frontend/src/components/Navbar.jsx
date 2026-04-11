@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
@@ -6,13 +6,15 @@ import "../App.css";
 import { useAuth } from "../context/Authcontext.jsx";
 import { User2 } from "lucide-react";
 import { FaCartShopping } from "react-icons/fa6";
+import { MdDiscount } from "react-icons/md";
+import { GiMoneyStack } from "react-icons/gi";
 import {
   LuHistory,
   LuLogOut,
   LuPackage,
   LuClipboardList,
+  LuUsersRound,
 } from "react-icons/lu";
-import api from "../api/axiosinstance.jsx";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -206,7 +208,45 @@ export function Navbar() {
                                   All Orders
                                 </button>
                               </div>
+                              <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
+                                <button
+                                  className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
+                                  onClick={() => {
+                                    handleRedirect("/users");
+                                    setAccountOverlay(false);
+                                  }}
+                                >
+                                  <LuUsersRound className="h-5 mr-3" />
+                                  All Users
+                                </button>
+                              </div>
+                              <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
+                                <button
+                                  className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
+                                  onClick={() => {
+                                    handleRedirect("/discount");
+                                    setAccountOverlay(false);
+                                  }}
+                                >
+                                  <MdDiscount className="h-5 mr-3" />
+                                  Discount Coupons
+                                </button>
+                              </div>
                             </>
+                          )}
+                          {(user?.role === "admin" || user?.role === "creator") && (
+                            <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
+                              <button
+                                className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
+                                onClick={() => {
+                                  handleRedirect("/comissions");
+                                  setAccountOverlay(false);
+                                }}
+                              >
+                                <GiMoneyStack className="h-5 mr-3" />
+                                Creator Comissions
+                              </button>
+                            </div>
                           )}
                           <div className="flex justify-start items-center rounded-full my-4 ">
                             <button
@@ -354,7 +394,42 @@ export function Navbar() {
                               <LuClipboardList className="mr-2 p-0.5 h-5 w-5" />
                               All Orders
                             </button>
+                            <button
+                              onClick={() => {
+                                handleRedirect("/users");
+                                setAccountOverlay(false);
+                                setIsOpen(false);
+                              }}
+                              className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
+                            >
+                              <LuUsersRound className="mr-2 p-0.5 h-5 w-5" />
+                              All Users
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleRedirect("/discount");
+                                setAccountOverlay(false);
+                                setIsOpen(false);
+                              }}
+                              className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
+                            >
+                              <MdDiscount className="mr-2 p-0.5 h-5 w-5" />
+                              Discount Coupons
+                            </button>
                           </>
+                        )}
+                        {(user?.role === "admin" || user?.role === "creator") && (
+                          <button
+                            onClick={() => {
+                              handleRedirect("/comissions");
+                              setAccountOverlay(false);
+                              setIsOpen(false);
+                            }}
+                            className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
+                          >
+                            <GiMoneyStack className="mr-2 p-0.5 h-5 w-5" />
+                            Creator Comissions
+                          </button>
                         )}
                       </div>
                     )}

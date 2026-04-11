@@ -6,17 +6,17 @@ import api from "../api/axiosinstance";
 
 function OrderSuccess() {
   const { orderId } = useParams();
-  useEffect(() => {
-    const sendMail = async () => {
-      if (!orderId) {
-        return;
-      }
-      const res = await api.patch(`/api/auth/send-mail/${orderId}`);
-      console.log(res);
-    };
+  // useEffect(() => {
+  //   const sendMail = async () => {
+  //     if (!orderId) {
+  //       return;
+  //     }
+  //     const res = await api.patch(`/api/auth/send-mail/${orderId}`);
+  //     console.log(res);
+  //   };
 
-    sendMail();
-  }, []);
+  //   sendMail();
+  // }, []);
 
   return (
     <div>

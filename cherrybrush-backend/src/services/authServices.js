@@ -93,7 +93,8 @@ export const fetchCart = async (user_id) => {
         cs.color AS color,
         sz.size AS size,
         sh.shape AS shape,
-        c.cart_id AS cart_id 
+        c.cart_id AS cart_id,
+        cpn.discount_code AS coupon_code 
     FROM carts c
     JOIN cart_items ci ON c.cart_id = ci.cart_id
     JOIN products pi ON ci.product_id = pi.product_id
@@ -101,6 +102,7 @@ export const fetchCart = async (user_id) => {
     LEFT JOIN colors cs ON pv.color_id = cs.id
     LEFT JOIN shapes sh ON pv.shape_id = sh.id
     LEFT JOIN sizes sz ON pv.size_id = sz.id
+    LEFT JOIN discount_coupons cpn ON c.coupon_id = cpn.id
     WHERE c.user_id = $1`,
     [user_id]
   );
@@ -225,13 +227,21 @@ export const createSession = async (cartItem) => {
       quantity: item.quantity,
     }));
 
-  const session = await stripe.checkout.sessions.create({
+  const sessionConfig = {
     payment_method_types: ["card"],
     mode: "payment",
     ui_mode: "embedded",
     line_items: lineItems,
     return_url: `${process.env.FRONTEND_URL}/checkout?session_id={CHECKOUT_SESSION_ID}`,
-  });
+  };
+
+  if (cartItem[0].coupon_code) {
+    const coupon = await getDiscountCouponByCode(cartItem[0].coupon_code);
+
+    sessionConfig.discounts = [{ coupon: coupon.id }];
+  }
+
+  const session = await stripe.checkout.sessions.create(sessionConfig);
 
   return session;
 };
@@ -346,14 +356,15 @@ export const createOrder = async (
   amount,
   status,
   payment_method,
-  address_id
+  address_id,
+  discount_price
 ) => {
   const { rows } = await query(
     `
-    INSERT INTO orders(user_id, total_amount, status, payment_method, created_at, address_id)
-    VALUES($1, $2, $3, $4, NOW(), $5) RETURNING *
+    INSERT INTO orders(user_id, total_amount, status, payment_method, created_at, address_id, discount)
+    VALUES($1, $2, $3, $4, NOW(), $5, $6) RETURNING *
     `,
-    [user_id, amount, status, payment_method, address_id]
+    [user_id, amount, status, payment_method, address_id, discount_price]
   );
 
   return rows[0];
@@ -452,6 +463,7 @@ export const orderByOrderId = async (user_id, order_id, role = "user") => {
       odr.payment_method AS payment_method,
       odr.created_at AS order_date,
       odr.is_email_sent AS is_email_sent,
+      odr.discount AS discount,
       oi.product_id AS product_id,
       oi.quantity AS quantity,
       oi.price_at_purchase AS price,
@@ -503,6 +515,7 @@ export const orderHistory = async (user_id) => {
       odr.payment_method AS payment_method,
       odr.status AS status,
       odr.total_amount AS total_amount,
+      odr.discount AS discount,
       usr.username AS name
     FROM orders odr 
     JOIN users usr ON usr.id = odr.user_id
@@ -524,6 +537,7 @@ export const allOrders = async () => {
       odr.payment_method AS payment_method,
       odr.status AS status,
       odr.total_amount AS total_amount,
+      odr.discount AS discount,
       usr.username AS name
     FROM orders odr 
     JOIN users usr ON usr.id = odr.user_id
@@ -686,4 +700,266 @@ export const getAllComment = async () => {
   );
 
   return rows;
+};
+
+export const createDiscountCoupon = async (coupon_info) => {
+  const {
+    coupon_code,
+    coupon_price,
+    coupon_percent,
+    coupon_description,
+    referal_id,
+    max_redemption,
+    max_redemption_per_user,
+    expires_at,
+  } = coupon_info;
+
+  const { rows } = await query(
+    `
+    INSERT INTO discount_coupons(discount_code, discount_price, discount_percent, discount_description, referal_id, created_at, max_redemption, redemption_per_user, expires_at, current_usage_count)
+    VALUES($1, $2, $3, $4, $5, NOW(), $6, $7, $8, $9) RETURNING *
+    `,
+    [
+      coupon_code,
+      coupon_price || null,
+      coupon_percent || null,
+      coupon_description,
+      referal_id || null,
+      max_redemption || null,
+      max_redemption_per_user || null,
+      expires_at || null,
+      0,
+    ]
+  );
+
+  const newCoupon = rows[0];
+
+  const stripePayload = {
+    id: String(newCoupon.id),
+    name: coupon_code,
+  };
+
+  if (coupon_price) {
+    stripePayload.amount_off = coupon_price * 100;
+    stripePayload.currency = "inr";
+  } else if (coupon_percent) {
+    stripePayload.percent_off = coupon_percent;
+  }
+
+  await stripe.coupons.create(stripePayload);
+
+  return rows;
+};
+
+export const getAllDiscountCoupon = async () => {
+  const { rows } = await query(
+    `SELECT * FROM discount_coupons
+    WHERE referal_id IS NULL
+    AND (
+    current_usage_count < max_redemption
+    OR max_redemption IS NULL
+    OR current_usage_count IS NULL
+    )`
+  );
+
+  return rows;
+};
+
+export const getAdminDiscountCoupons = async () => {
+  const { rows } = await query(`SELECT * FROM discount_coupons`);
+
+  return rows;
+};
+
+export const getDiscountCouponByCode = async (code) => {
+  const { rows } = await query(
+    `SELECT * FROM discount_coupons WHERE discount_code = $1`,
+    [code]
+  );
+
+  return rows[0];
+};
+
+export const deleteUser = async (userId) => {
+  const { rows } = await query(`DELETE FROM users WHERE id = $1 RETURNING *`, [
+    userId,
+  ]);
+  return rows;
+};
+
+export const searchUser = async (searchTerm) => {
+  const { rows } = await query(
+    `SELECT 
+      usr.id AS user_id,
+      usr.username AS username,
+      usr.email AS email,
+      usr.phone_no AS phone_no
+    FROM users usr 
+    WHERE username ILIKE $1 OR email ILIKE $1
+    LIMIT 5`,
+    [`%${searchTerm}%`]
+  );
+  return rows;
+};
+
+export const addCouponToCart = async (user_id, coupon_id) => {
+  const { rows } = await query(
+    `
+    UPDATE carts
+    SET coupon_id = $1
+    WHERE user_id = $2 
+    RETURNING *
+    `,
+    [coupon_id, user_id]
+  );
+
+  return rows[0];
+};
+
+export const deleteCouponFromCart = async (user_id) => {
+  const { rows } = await query(
+    `
+    UPDATE carts SET coupon_id = NULL WHERE user_id = $1 RETURNING *
+    `,
+    [user_id]
+  );
+
+  return rows[0];
+};
+
+export const createCouponRedemption = async (user_id, order_id, coupon_id) => {
+  const { rows } = await query(
+    `
+    INSERT INTO coupon_redemptions(user_id, order_id, coupon_id)
+    VALUES($1, $2, $3) RETURNING *
+    `,
+    [user_id, order_id, coupon_id]
+  );
+
+  return rows[0];
+};
+
+export const updateCouponUsedCount = async (coupon_id) => {
+  const { rows } = await query(
+    `
+    UPDATE discount_coupons
+      SET current_usage_count = current_usage_count + 1
+    WHERE id = $1
+    `,
+    [coupon_id]
+  );
+
+  return rows[0];
+};
+
+export const userCouponUsedCount = async (user_id, coupon_id) => {
+  const { rows } = await query(
+    `
+    SELECT COUNT(*) FROM coupon_redemptions
+    WHERE user_id = $1 AND coupon_id = $2
+    `,
+    [user_id, coupon_id]
+  );
+
+  return rows[0];
+};
+
+export const maxRedemptions = async (coupon_id) => {
+  const { rows } = await query(
+    `
+    SELECT
+     redemption_per_user AS max_per_user_redemption,
+     max_redemption AS global_max_redemption,
+     current_usage_count AS current_count
+    FROM discount_coupons WHERE id = $1
+     `,
+    [coupon_id]
+  );
+
+  return rows[0];
+};
+
+export const getCreatorCoupons = async (user_id) => {
+  const { rows } = await query(
+    `SELECT * FROM discount_coupons WHERE referal_id = $1`,
+    [user_id]
+  );
+
+  return rows;
+};
+
+export const ordersWithCoupons = async (user_id) => {
+  const { rows } = await query(
+    `
+    SELECT 
+      odr.discount AS discount,
+      odr.total_amount AS total_paid,
+      odr.user_id AS customer_id,
+      odr.id AS order_id,
+      odr.created_at AS order_date,
+      dcn.discount_code AS creator_code
+    FROM coupon_redemptions cr
+    LEFT JOIN discount_coupons dcn ON dcn.id = cr.coupon_id
+    LEFT JOIN users usr ON usr.id = cr.user_id
+    LEFT JOIN orders odr ON odr.id = cr.order_id
+    WHERE dcn.referal_id = $1
+    `,
+    [user_id]
+  );
+
+  return rows;
+};
+
+export const getUsers = async () => {
+  const { rows } = await query(`SELECT * FROM users`);
+
+  return rows;
+};
+
+export const updateUserRole = async (user_id, role) => {
+  const { rows } = await query(
+    `UPDATE users
+     SET role = $2
+    WHERE id = $1
+    RETURNING *`,
+    [user_id, role]
+  );
+
+  return rows[0];
+};
+
+export const updateUserPassword = async (user_id, new_password) => {
+  if (!new_password) return;
+  const hashedPassword = await bcrypt.hash(new_password, 10);
+
+  const { rows } = await query(
+    `UPDATE users
+     SET password_hash = $2
+    WHERE id = $1
+    RETURNING *`,
+    [user_id, hashedPassword]
+  );
+
+  return rows[0];
+};
+
+export const removeCartItems = async (cart_id) => {
+  const { rows } = await query(
+    `DELETE FROM cart_items WHERE cart_id = $1 RETURNING *`,
+    [cart_id]
+  );
+
+  return rows;
+};
+
+export const removeCartCoupon = async (user_id) => {
+  const { rows } = await query(
+    `UPDATE carts
+     SET coupon_id = NULL
+    WHERE user_id = $1
+    RETURNING *`,
+    [user_id]
+  );
+
+  return rows[0];
 };

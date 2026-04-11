@@ -3,10 +3,10 @@ import { useAuth } from "../context/Authcontext.jsx";
 import api from "../api/axiosinstance.jsx";
 import { TbShoppingCartCancel, TbTrash } from "react-icons/tb";
 import { IconContext } from "react-icons";
-import { FaFolder } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { load } from "@cashfreepayments/cashfree-js";
+import { MdDiscount } from "react-icons/md";
 
 function Cart() {
   const navigate = useNavigate();
@@ -14,7 +14,10 @@ function Cart() {
   const [cart, setCart] = useState([]);
   const [subTotal, setSubTotal] = useState(0);
   const [deliveryCost, setDeliveryCost] = useState(0);
+  const [coupons, setCoupons] = useState(null);
+  const [discountCode, setDiscountCode] = useState(null);
   const [discount, setDiscount] = useState(0);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
 
   const { user } = useAuth();
 
@@ -87,17 +90,80 @@ function Cart() {
     }
   };
 
+  const checkDiscount = async (code) => {
+    if (!code) return;
+    const res = await api.get(`/api/auth/coupon/${code}`);
+    console.log(res.data.id);
+    setSelectedCoupon(res.data);
+    setDiscount(res.data.discount_price);
+  };
+
+  const handleDiscount = async (code) => {
+    try {
+      const res = await api.get(`/api/auth/coupon/${code}`);
+      if (!res.data.id)
+        return alert(`No Coupon with the '${code}' Code Found.`);
+      const cartCoupon = await api.post(`/api/auth/cart-coupon/${res.data.id}`);
+      console.log("Coupon Added to Cart ", cartCoupon.data);
+      if (!cartCoupon.data.message) {
+        setSelectedCoupon(res.data);
+        setDiscount(res.data.discount_price);
+      } else {
+        alert(cartCoupon.data.message);
+      }
+    } catch (err) {
+      console.error("Error", err);
+    }
+    console.log(`Dicount Id ${code}`);
+  };
+
+  const removeDiscount = async (id) => {
+    const res = await api.delete(`/api/auth/delete-cart-coupon`);
+    console.log(res.data);
+    setSelectedCoupon(null);
+    console.log(id);
+  };
+
+  useEffect(() => {
+    const getCreatorCoupon = async () => {
+      if (cart.length > 0) {
+        const creatorCoupon = localStorage.getItem("creatorCoupon");
+        console.log(creatorCoupon);
+        if (!creatorCoupon || creatorCoupon === null) return;
+        if (creatorCoupon.length > 0) {
+          setSelectedCoupon(null);
+          handleDiscount(creatorCoupon);
+          localStorage.removeItem("creatorCoupon");
+        }
+      }
+    };
+
+    getCreatorCoupon();
+  }, [cart]);
+
+  useEffect(() => {
+    const getDiscounts = async () => {
+      const res = await api.get("/api/auth/coupons");
+      setCoupons(res.data);
+      console.log(res.data);
+    };
+
+    getDiscounts();
+  }, []);
+
   useEffect(() => {
     if (!user) return;
 
     const fetchCart = async () => {
       try {
         const res = await api.get("/api/auth/cart");
-        if (!res) {
+        if (!res.data) {
           console.log("Error fetching Cart");
           return;
         }
         setCart(res.data);
+        if (!res.data[0].coupon_code) return;
+        checkDiscount(res.data[0].coupon_code);
       } catch (err) {
         console.log("Error Adding to cart", err);
       }
@@ -276,14 +342,103 @@ function Cart() {
           <div className="flex">Delivery:</div>
           <div className="flex">{parseFloat(deliveryCost).toFixed(2)}</div>
         </div>
-        <div id="Discount" className="flex justify-between">
+        <div id="Discount" className="flex justify-between mb-5">
           <div className="flex">Discount:</div>
           <div className="flex">-{parseFloat(discount).toFixed(2)}</div>
         </div>
-        <div id="separator" className="p-2"></div>
+        {selectedCoupon ? (
+          <div className="flex flex-col border rounded-md px-2.5 py-4">
+            <p className="px-1 mb-2">Applied Discount Code</p>
+
+            <div id="Discount-Holder" className="mb-2.5">
+              {selectedCoupon && (
+                <div className="flex justify-between items-center border rounded-md px-1.5 py-3 bg-gray-50">
+                  <div>
+                    <div className="flex items-center font-semibold mb-2">
+                      <MdDiscount className="mr-3" />
+                      <span>{selectedCoupon?.discount_code}</span>
+                    </div>
+                    <div className="ml-7">
+                      {selectedCoupon?.discount_description}
+                    </div>
+                  </div>
+                  <div>
+                    <button onClick={() => removeDiscount(selectedCoupon?.id)}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col border rounded-md px-2.5 py-4">
+            <p className="px-1 mb-2">Apply Discount Code</p>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Discount Code"
+                value={discountCode ? discountCode : ""}
+                onChange={(e) => setDiscountCode(e.target.value)}
+                className="px-3 py-3 w-full flex justify-center items-center bg-white rounded-md"
+              ></input>
+              <div className="absolute top-3 right-5">
+                {discountCode && discountCode.length > 1 ? (
+                  <button
+                    onClick={() => handleDiscount(discountCode)}
+                    className=""
+                  >
+                    Apply
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="disabled:cursor-not-allowed"
+                  >
+                    Apply
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="border-b border-black my-2.5"></div>
+            <div className="border rounded-md px-2 py-2">
+              <p className="mb-2">Discounts</p>
+              <div id="Discount-Holder" className="mb-2.5">
+                {coupons &&
+                  coupons.map((coupon) => (
+                    <div
+                      key={coupon?.id}
+                      className="flex justify-between items-center border rounded-md px-1.5 py-3 mb-2"
+                    >
+                      <div>
+                        <div className="flex items-center font-semibold mb-2">
+                          <MdDiscount className="mr-3" />
+                          <span>{coupon?.discount_code}</span>
+                        </div>
+                        <div className="ml-7">
+                          {coupon?.discount_description}
+                        </div>
+                      </div>
+                      <div>
+                        <button
+                          onClick={() => handleDiscount(coupon?.discount_code)}
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
+        <div id="separator" className="py-3"></div>
         <div id="Grand Total" className="flex justify-between font-bold">
           <div className="flex">Grand Total:</div>
-          <div className="flex">{parseFloat(subTotal).toFixed(2)}</div>
+          <div className="flex">
+            {parseFloat(subTotal - discount).toFixed(2)}
+          </div>
         </div>
         <div id="separator" className="p-2"></div>
         <div id="checkout" className="flex justify-end">

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { LuCheck } from "react-icons/lu";
-import ProgressBar from "../components/ProgressBar";
 import api from "../api/axiosinstance";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -126,6 +125,7 @@ function Checkout() {
           payment_method: paymentMethod,
         });
         localStorage.setItem("orderId", res.data.order_id);
+        localStorage.setItem("cartId", cartId);
         console.log(res.data.order_id);
       }
 
@@ -241,12 +241,15 @@ function Checkout() {
   useEffect(() => {
     const createTransaction = async () => {
       const orderId = localStorage.getItem("orderId");
-      if (transaction && transaction !== 404) {
+
+      if (transaction && transaction !== 404 && orderId) {
         const res = await api.post(`/api/auth/create-transaction/${orderId}`, {
           transaction,
         });
+
         setOrderId(res.data.orderStatus.id);
         console.log(res.data);
+        localStorage.removeItem("orderId");
       }
     };
 
@@ -271,6 +274,19 @@ function Checkout() {
       if (!orderId) {
         id = localStorage.getItem("orderId");
       }
+
+      const clearCart = async () => {
+        const cartId = localStorage.getItem("cartId");
+        if (!cartId) return;
+        if (cartId) {
+          const clearCart = await api.delete(`/api/auth/clear-cart/${cartId}`);
+          console.log(clearCart.data);
+        }
+        localStorage.removeItem("cartId");
+      };
+
+      clearCart();
+
       const timer = setTimeout(() => {
         navigate(`/checkout/success/${orderId || id}`);
       }, 3000);
@@ -349,30 +365,34 @@ function Checkout() {
     <div className="m-5">
       {addressPopup && (
         <div className="flex justify-center items-center fixed top-0 left-0 w-full h-full z-50 backdrop-blur-[2px]">
-          <div className="bg-white h-fit w-2xs border border-black rounded-lg px-2 pb-2">
+          <div className="bg-white h-fit w-2xs md:w-[400px] border border-black rounded-lg px-2 pb-2">
             <div className="flex justify-between items-center px-3 py-1.5 border-b border-black mb-3">
               <div className="">Select Address</div>
               <button onClick={() => setAddressPopup(false)}>
                 <IoMdClose />
               </button>
             </div>
-            {databaseAddress.map((dba) => (
+            {databaseAddress.map((dba, i) => (
               <div
                 key={dba.id}
                 className="bg-white h-fit border border-black rounded-lg mb-3"
               >
                 <button
-                  className="w-full h-full text-sm"
+                  className="w-full h-full text-sm px-3 py-2"
                   onClick={() => {
                     setAddressPopup(false);
                     handleAddress(dba);
                   }}
                 >
-                  <div>{dba.address_name}</div>
-                  <div className="truncate">{dba.address}</div>
-                  <div>{dba.mobile_no}</div>
-                  <div>{dba.pincode}</div>
-                  <div>{dba.state_name}</div>
+                  <div className="flex flex-col text-left">
+                    <div className="font-bold">
+                      {i + 1}. {dba.address_name}
+                    </div>
+                    <div className="font-semibold">{dba.mobile_no}</div>
+                    <div className="font-light w-full truncate">
+                      {dba.address}, {dba.state_name}, {dba.pincode}
+                    </div>
+                  </div>
                 </button>
               </div>
             ))}
@@ -449,10 +469,13 @@ function Checkout() {
                 )}
               </div>
               <div className="border-t border-gray-300 mt-0.5 mb-3"></div>
-              <div className="w-1/2 font-light mx-40 py-2">
-                <div className="overflow-hidden m-auto">
-                  <form onSubmit={handleSubmit}>
-                    <div className="flex flex-col w-1/2 mb-3">
+              <div className="w-full flex justify-center font-light py-2">
+                <div className="md:w-2/5 overflow-hidden">
+                  <form
+                    onSubmit={handleSubmit}
+                    className="flex flex-col justify-center"
+                  >
+                    <div className="flex flex-col w-full mb-3">
                       <label className="mb-1">Recipient Name*</label>
                       <input
                         type="text"
@@ -466,7 +489,7 @@ function Checkout() {
                       ></input>
                     </div>
                     <div className="text-lg mb-1.5">Shipping Address</div>
-                    <div className="flex flex-col w-1/2 mb-3">
+                    <div className="flex flex-col w-full mb-3">
                       <label className="mb-1">
                         Flat No. / Apt Name / House No.
                       </label>
@@ -482,7 +505,7 @@ function Checkout() {
                         maxLength={50}
                       ></input>
                     </div>
-                    <div className="flex flex-col w-1/2 mb-3">
+                    <div className="flex flex-col w-full mb-3">
                       <label className="mb-1">Address</label>
                       <textarea
                         type="text"
@@ -497,7 +520,7 @@ function Checkout() {
                         maxLength={400}
                       ></textarea>
                     </div>
-                    <div className="flex flex-col w-1/2 mb-3">
+                    <div className="flex flex-col w-full mb-3">
                       <label className="mb-1">
                         Locality / Area{" "}
                         <span className="font-[100]"> (optional)</span>
@@ -513,7 +536,7 @@ function Checkout() {
                         maxLength={100}
                       ></input>
                     </div>
-                    <div className="w-1/2 grid grid-cols-3 gap-3">
+                    <div className="w-full grid grid-cols-3 gap-3">
                       <div className="flex flex-col w-full">
                         <label className="mb-1">State</label>
                         <input
@@ -557,7 +580,7 @@ function Checkout() {
                         ></input>
                       </div>
                     </div>
-                    <div className="flex flex-col w-1/2 my-3">
+                    <div className="flex flex-col w-full my-3">
                       <label className="mb-1">Mobile Number</label>
                       <input
                         type="text"
@@ -571,7 +594,7 @@ function Checkout() {
                         maxLength={50}
                       ></input>
                     </div>
-                    <div className="w-1/2 mb-10">
+                    <div className="w-full mb-10">
                       <div className="text-lg mb-2">Payment Options</div>
                       <button
                         type="submit"
@@ -601,7 +624,7 @@ function Checkout() {
               <div className="w-full flex justify-center mt-5">
                 <button
                   onClick={handlePrevious}
-                  className="w-1/2 uppercase border py-2 border-black text-sm rounded-lg cursor-pointer hover:bg-black hover:text-white transition-all"
+                  className="w-full uppercase border py-2 border-black text-sm rounded-lg cursor-pointer hover:bg-black hover:text-white transition-all"
                 >
                   GO Back
                 </button>

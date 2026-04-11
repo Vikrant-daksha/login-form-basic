@@ -282,6 +282,8 @@ export const createOrder = async (req, res) => {
     const { address_id, cart_id, productData, payment_method } = req.body;
 
     let total_amount;
+    let discount;
+    let coupon_id;
 
     if (cart_id) {
       const cart = await authService.fetchCart(user_id);
@@ -289,6 +291,15 @@ export const createOrder = async (req, res) => {
       total_amount = cart.reduce((total, item) => {
         return total + item.price * item.quantity;
       }, 0);
+
+      if (cart[0].coupon_code) {
+        const coupon = await authService.getDiscountCouponByCode(
+          cart[0].coupon_code
+        );
+        discount = coupon.discount_price;
+        total_amount = total_amount - Number(discount);
+        coupon_id = coupon.id;
+      }
     }
 
     if (productData) {
@@ -301,7 +312,8 @@ export const createOrder = async (req, res) => {
       total_amount,
       "pending",
       payment_method,
-      address_id
+      address_id,
+      discount
     );
 
     let orderItems;
@@ -312,6 +324,8 @@ export const createOrder = async (req, res) => {
 
     if (cart_id) {
       orderItems = await authService.orderItemsCartId(order.id, cart_id);
+      await authService.createCouponRedemption(user_id, order.id, coupon_id);
+      await authService.updateCouponUsedCount(coupon_id);
     }
     res.status(200).json({ order_id: order.id, order: orderItems });
   } catch (err) {
@@ -344,7 +358,7 @@ export const createTransaction = async (req, res) => {
 
       if (!orderInfo.is_email_sent) {
         await sendOrderConfirmationEmail(orderInfo.user_email, orderDetails);
-        await authService.sendEmail(orderId);
+        // await authService.sendEmail(orderId);
       }
     }
 
@@ -421,5 +435,172 @@ export const getAllComments = async (req, res) => {
   } catch (err) {
     console.log("Error", err);
     res.status(500).json("Internal Server Error");
+  }
+};
+
+export const createDiscountCoupon = async (req, res) => {
+  try {
+    const couponInfo = req.body;
+    const createCoupon = await authService.createDiscountCoupon(couponInfo);
+    res.status(200).json(createCoupon);
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const getDiscountCoupons = async (req, res) => {
+  try {
+    const coupons = await authService.getAllDiscountCoupon();
+    res.status(200).json(coupons);
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const getCreatorCoupon = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const coupons = await authService.getCreatorCoupons(user_id);
+    res.status(200).json(coupons);
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const adminCoupons = async (req, res) => {
+  try {
+    const coupons = await authService.getAdminDiscountCoupons();
+    res.status(200).json(coupons);
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const getDiscountCouponByCode = async (req, res) => {
+  try {
+    const discount_code = req.params.code;
+    const coupon = await authService.getDiscountCouponByCode(discount_code);
+    res.status(200).json(coupon);
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const deleted = await authService.deleteUser(userId);
+    if (!deleted) {
+      res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).send();
+  } catch (err) {
+    console.error("Error Deleting User", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const searchUser = async (req, res) => {
+  try {
+    const searchTerm = req.query.q;
+    const users = await authService.searchUser(searchTerm);
+    res.status(200).json(users);
+  } catch (err) {
+    console.error("Error Searching User", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const addCoupon = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const coupon_id = req.params.id;
+    let message;
+    let addedCoupon;
+    const coupon_is_used = await authService.userCouponUsedCount(
+      user_id,
+      coupon_id
+    );
+    const max_coupon_redemption = await authService.maxRedemptions(coupon_id);
+    if (
+      max_coupon_redemption.max_per_user_redemption &&
+      max_coupon_redemption.global_max_redemption &&
+      coupon_is_used.count >= max_coupon_redemption.max_per_user_redemption
+    ) {
+      message = "You have Already used this Coupon!";
+    } else {
+      addedCoupon = await authService.addCouponToCart(user_id, coupon_id);
+    }
+    res.status(200).json({ coupon: addedCoupon, message: message });
+  } catch (err) {
+    console.error("Error Adding Coupon", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const deleteCoupon = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const deletedCoupon = await authService.deleteCouponFromCart(user_id);
+    res.status(200).json(deletedCoupon);
+  } catch (err) {
+    console.error("Error Deleting Coupon", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const orderCoupons = async (req, res) => {
+  try {
+    const user_id = req.id;
+    const orders = await authService.ordersWithCoupons(user_id);
+    res.status(200).json(orders);
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await authService.getUsers();
+    res.status(200).json(users);
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const editUserRole = async (req, res) => {
+  try {
+    const { user_id, role, password } = req.body;
+    const editedUserRole = await authService.updateUserRole(user_id, role);
+    const editedUserPassword = await authService.updateUserPassword(
+      user_id,
+      password
+    );
+    res
+      .status(200)
+      .json({ newUser: editedUserRole, newPassword: editedUserPassword });
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const clearCart = async (req, res) => {
+  try {
+    const userId = req.id;
+    const { cartId } = req.params;
+    const clearCartItems = await authService.removeCartItems(cartId);
+    const clearCoupon = await authService.removeCartCoupon(userId);
+    res.status(200).json({ cartItems: clearCartItems, coupon: clearCoupon });
+  } catch (err) {
+    console.error("Error", err);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };

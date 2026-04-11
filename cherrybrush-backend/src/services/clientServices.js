@@ -20,19 +20,6 @@ export const updateUser = async (userData, userId) => {
   return rows[0];
 };
 
-export const deleteUser = async (userId) => {
-  const { rowCount } = await query(`DELETE FROM users WHERE id = $1`, [userId]);
-  return rowCount > 0;
-};
-
-export const searchUser = async (searchTerm) => {
-  const { rows } = await query(
-    `SELECT * FROM users WHERE name ILIKE $1 OR email ILIKE $1`,
-    [`%${searchTerm}%`]
-  );
-  return rows;
-};
-
 export const getAllProducts = async () => {
   const { rows } = await query(`SELECT * FROM products`);
 

@@ -738,7 +738,7 @@ export function Product() {
           </div>
         </div>
       )}
-      <div className="grid gap-3 mt-5">
+      <div className="grid gap-3 mt-5 mb-8">
         <div className="flex items-center justify-between mx-5 mb-2">
           <div className="text-lg">All Products</div>
           <div>

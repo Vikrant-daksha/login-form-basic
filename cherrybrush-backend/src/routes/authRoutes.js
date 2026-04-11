@@ -28,14 +28,24 @@ router.get(
   authController.createCheckoutSession
 );
 
-router.post("/buy-now/:productId", authController.buyNow);
+router.post(
+  "/buy-now/:productId",
+  authMiddleware.loginRequire,
+  authController.buyNow
+);
 
 router.post("/check", authController.upload);
 
-router.get("/checkout/:sessionId", authController.sessionConfirmation);
+router.get(
+  "/checkout/:sessionId",
+  authMiddleware.loginRequire,
+  authController.sessionConfirmation
+);
 
 router.post(
   "/product/add-variant/:productId",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
   authController.addProductVariant
 );
 
@@ -135,5 +145,89 @@ router.post(
 router.get("/get-comments/:productId", authController.getComments);
 
 router.get("/all-comments/", authController.getAllComments);
+
+router.post(
+  "/create-coupon",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.createDiscountCoupon
+);
+
+router.get(
+  "/all-coupons",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.adminCoupons
+);
+
+router.get(
+  "/coupons",
+  authMiddleware.loginRequire,
+  authController.getDiscountCoupons
+);
+
+router.get(
+  "/coupon/:code",
+  authMiddleware.loginRequire,
+  authController.getDiscountCouponByCode
+);
+
+router.get(
+  "/orders-with-coupons",
+  authMiddleware.loginRequire,
+  authController.orderCoupons
+);
+
+router.get(
+  "/get-user/search",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.searchUser
+);
+
+router.post(
+  "/cart-coupon/:id",
+  authMiddleware.loginRequire,
+  authController.addCoupon
+);
+
+router.delete(
+  "/delete-cart-coupon",
+  authMiddleware.loginRequire,
+  authController.deleteCoupon
+);
+
+router.get(
+  "/all-users",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.getAllUsers
+);
+
+router.delete(
+  "/delete-user/:id",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.deleteUser
+);
+
+router.delete(
+  "/clear-cart/:cartId",
+  authMiddleware.loginRequire,
+  authController.clearCart
+);
+
+router.post(
+  "/edit-user-role",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.editUserRole
+);
+
+router.get(
+  "/creator-coupons",
+  authMiddleware.loginRequire,
+  authController.getCreatorCoupon
+);
 
 export default router;

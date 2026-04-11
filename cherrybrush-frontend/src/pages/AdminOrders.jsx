@@ -124,43 +124,63 @@ function AdminOrders() {
       )}
       <div className="mx-5 my-4">
         <div className="text-xl mx-1 mb-5">Orders</div>
-        <div className="grid grid-cols-1 gap-3">
-          <div className="grid grid-cols-[50px_80px_1fr_1fr_100px] md:grid-cols-[100px_1fr_1fr_200px_100px_1fr] text-sm text-center border-b border-black pb-2">
-            <div>Order NO</div>
-            <div className="hidden md:flex w-full justify-center">Date</div>
-            <div>Customer</div>
-            <div>Payment Status</div>
-            <div>Total</div>
-            <div>Actions</div>
-          </div>
-          {orders?.map((order) => (
-            <div
-              key={order.order_id}
-              className="grid grid-cols-[50px_80px_1fr_1fr_100px] md:grid-cols-[100px_1fr_1fr_200px_100px_1fr] text-sm text-center py-3 border-b"
-            >
-              <div>{order.order_id}</div>
-              <div className="hidden md:flex">{formatDate(order.date)}</div>
-              <div className="truncate">{order.name}</div>
-              <div>{order.status}</div>
-              <div>{order.total_amount}</div>
-              <div className="flex justify-evenly items-center">
-                <Link to={`/order-history/${order.order_id}`}>
-                  <div>
-                    <LuClipboardList className="text-sm" />
-                  </div>
-                </Link>
-                <button
-                  onClick={() => {
-                    setOrderId(order.order_id);
-                    setDeletePopUP(true);
-                    // deleteOrder(order.order_id);
-                  }}
-                >
-                  <TbTrash className="text-sm text-red-600" />
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Payment Status</th>
+                <th>Total Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="">
+              {orders?.length > 0 ? (
+                orders.map((order, idx) => (
+                  <tr key={idx}>
+                    <td>#{order.order_id}</td>
+                    <td>{formatDate(order.date)}</td>
+                    <td>{order.name}</td>
+                    <td>{order.status}</td>
+                    <td>₹ {parseFloat(order.total_amount).toFixed(2)}</td>
+                    <td className="commission-highlight">
+                      <div className="flex justify-evenly items-center">
+                        <Link to={`/order-history/${order.order_id}`}>
+                          <div>
+                            <LuClipboardList className="text-sm" />
+                          </div>
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setOrderId(order.order_id);
+                            setDeletePopUP(true);
+                            // deleteOrder(order.order_id);
+                          }}
+                        >
+                          <TbTrash className="text-sm text-red-600" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    style={{
+                      textAlign: "center",
+                      padding: "32px",
+                      color: "#6b7280",
+                    }}
+                  >
+                    No orders found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </>

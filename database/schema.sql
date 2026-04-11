@@ -852,8 +852,35 @@ ALTER TABLE ONLY public.transactions
 CREATE TABLE comments(
     id SERIAL PRIMARY KEY NOT NULL,
     user_id INT REFERENCES users(id) NOT NULL,
-    product_id INT REFERENCES products(product_id) NOT NULL,
+    product_id INT REFERENCES products(product_id) NOT NULL ON DELETE CASCADE,
     comment TEXT NOT NULL,
     rating NUMERIC(2,1),
     created_at TIMESTAMPTZ DEFAULT NOW()
+)
+
+CREATE TABLE discount_coupons(
+    id SERIAL PRIMARY KEY NOT NULL,
+    discount_code VARCHAR(50) UNIQUE NOT NULL,
+    discount_price NUMERIC(10),
+    discount_percent NUMERIC(3, 2),
+    discount_description VARCHAR(255),
+    redemption_per_user INT,
+    current_usage_count INT,
+    max_redemption INT,
+    referal_id INT REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    expires_at TIMESTAMPTZ
+)
+
+CREATE TABLE coupon_redemptions(
+    id SERIAL PRIMARY KEY NOT NULL,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    order_id INT REFERENCES orders(id),
+    coupon_id INT REFERENCES discount_coupons(id) ON DELETE CASCADE
+)
+
+CREATE TABLE coupon_products(
+    id SERIAL PRIMARY KEY NOT NULL,
+    coupon_id INT REFERENCES discount_coupons(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(product_id) ON DELETE CASCADE
 )
