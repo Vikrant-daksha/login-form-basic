@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import api from "../api/axiosinstance";
-import { FaHeart, FaUser, FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
+import {
+  FaHeart,
+  FaUser,
+  FaStar,
+  FaStarHalfAlt,
+  FaRegStar,
+} from "react-icons/fa";
 import { TbTrash } from "react-icons/tb";
 import { useAuth } from "../context/Authcontext";
 import { IconSlider } from "../components/Carousel";
@@ -56,6 +62,7 @@ export function ProductDetails() {
         const res = await api.get(`/api/products/${slug}`);
         setProd(res.data.product);
         setVariants(res.data.variant);
+        console.log(res.data);
       } catch (err) {
         console.error("Error Fecthing Products");
       }
@@ -146,7 +153,9 @@ export function ProductDetails() {
     const res = await api.post("/api/auth/post-comment", commentData);
     console.log(res.data);
     // Refresh comments after posting
-    const updatedComments = await api.get(`/api/auth/get-comments/${product_id}`);
+    const updatedComments = await api.get(
+      `/api/auth/get-comments/${product_id}`
+    );
     setProductComments(updatedComments.data);
     setAddCommentPopup(false);
     setTitle("");
@@ -314,7 +323,7 @@ export function ProductDetails() {
                 {selectedImg && (
                   <img
                     src={selectedImg}
-                    className="object-contain aspect-square"
+                    className="object-cover aspect-square"
                   />
                 )}
               </div>
@@ -446,7 +455,10 @@ export function ProductDetails() {
                 <p className="text-[12px] font-light mb-6">
                   Free shipping on order above 2000/-
                 </p>
-                <p className="text-sm font-medium mb-5">{prod?.description}</p>
+                <div
+                  className="text-sm font-medium mb-5"
+                  dangerouslySetInnerHTML={{ __html: prod?.description }}
+                />
                 {/* <p className="text-[12px] font-light">
                   Punch up your look with This set, a white design on a nude
                   base and chrome finish, elevated with a long length.
@@ -616,7 +628,10 @@ export function ProductDetails() {
                         <div id="Stars">
                           <StarRating rating={comment.rating} showText={true} />
                         </div>
-                        <div id="date" className="font-extralight text-gray-500 text-sm">
+                        <div
+                          id="date"
+                          className="font-extralight text-gray-500 text-sm"
+                        >
                           {formatDate(comment.comment_date)}
                         </div>
                       </div>
@@ -624,7 +639,10 @@ export function ProductDetails() {
                         <p id="Subject" className="font-semibold mb-2">
                           {comment.title}
                         </p>
-                        <p id="Content" className="font-light text-gray-700 h-fit">
+                        <p
+                          id="Content"
+                          className="font-light text-gray-700 h-fit"
+                        >
                           {comment.comment}
                         </p>
                       </div>
@@ -658,7 +676,9 @@ export function ProductDetails() {
                 ))}
                 {productComments.length > 3 && (
                   <button
-                    onClick={() => {/* Maybe scroll to all reviews or expand */ }}
+                    onClick={() => {
+                      /* Maybe scroll to all reviews or expand */
+                    }}
                     className="text-center mt-4 text-sm font-light text-gray-500 hover:text-black"
                   >
                     + View {productComments.length - 3} more reviews
@@ -670,9 +690,12 @@ export function ProductDetails() {
                 <div className="bg-white p-4 rounded-full shadow-sm mb-4">
                   <FaStar className="text-gray-300 text-4xl" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2 font-serif">No Reviews Yet</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-2 font-serif">
+                  No Reviews Yet
+                </h3>
                 <p className="text-gray-500 mb-8 text-center max-w-xs">
-                  Your opinion matters! Be the first to review this product and share your experience.
+                  Your opinion matters! Be the first to review this product and
+                  share your experience.
                 </p>
                 <button
                   onClick={() => setAddCommentPopup(true)}
