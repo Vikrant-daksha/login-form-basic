@@ -51,8 +51,8 @@ function App() {
       <div
         className={
           loading
-            ? "fixed flex justify-center items-center w-full h-full bg-black z-50"
-            : "fixed flex justify-center items-center w-full h-full bg-black z-50 transition duration-[1500ms] delay-100 ease-out -translate-y-full border-b border-white"
+            ? "fixed flex justify-center items-center w-full h-full bg-black z-1000"
+            : "fixed flex justify-center items-center w-full h-full bg-black z-1000 transition duration-[1500ms] delay-100 ease-out -translate-y-full border-b border-white"
         }
       >
         <div>
