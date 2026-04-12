@@ -604,3 +604,39 @@ export const clearCart = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const addToGallery = async (req, res) => {
+  try {
+    const imgName = req.body.titles;
+    const fileArray = req.files;
+
+    const images = await authService.uploadGalleryImage(fileArray, imgName);
+
+    res.status(200).json(images);
+  } catch (err) {
+    console.error("Cannot Show Cart");
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const getGallery = async (req, res) => {
+  try {
+    const { cursor } = req.query;
+    const gallery = await authService.getGallery(cursor);
+    res.status(200).json(gallery);
+  } catch (err) {
+    console.error("Cannot fetch gallery", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const deleteFromGallery = async (req, res) => {
+  try {
+    const asset_id = req.params.assetId;
+    const gallery = await authService.deleteGalleryImage(asset_id);
+    res.status(200).json(gallery);
+  } catch (err) {
+    console.error("Cannot delete from gallery", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

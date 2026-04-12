@@ -5,7 +5,7 @@ export function Catalog() {
   return (
     <>
       <div className="px-4 py-5">
-        <ProductList page={"Press on Nails"} />
+        <ProductList page={"All Products"} />
       </div>
     </>
   );

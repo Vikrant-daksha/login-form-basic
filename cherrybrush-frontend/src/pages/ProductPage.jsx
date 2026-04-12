@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import api from "../api/axiosinstance";
-import { FaHeart, FaUser } from "react-icons/fa";
+import { FaHeart, FaUser, FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import { TbTrash } from "react-icons/tb";
 import { useAuth } from "../context/Authcontext";
 import { IconSlider } from "../components/Carousel";
@@ -145,6 +145,80 @@ export function ProductDetails() {
 
     const res = await api.post("/api/auth/post-comment", commentData);
     console.log(res.data);
+    // Refresh comments after posting
+    const updatedComments = await api.get(`/api/auth/get-comments/${product_id}`);
+    setProductComments(updatedComments.data);
+    setAddCommentPopup(false);
+    setTitle("");
+    setRating(0);
+    setComment("");
+  };
+
+  const StarRating = ({ rating, showText = false }) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 1; i <= 5; i++) {
+      if (i <= fullStars) {
+        stars.push(<FaStar key={i} className="text-yellow-400" />);
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars.push(<FaStarHalfAlt key={i} className="text-yellow-400" />);
+      } else {
+        stars.push(<FaRegStar key={i} className="text-gray-300" />);
+      }
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex gap-0.5">{stars}</div>
+        {showText && (
+          <span className="text-sm font-medium text-gray-600">
+            {rating} / 5
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  const StarRatingInput = ({ rating, setRating }) => {
+    const [hover, setHover] = useState(null);
+
+    return (
+      <div className="flex gap-1 py-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <div key={star} className="relative w-6 h-6 cursor-pointer">
+            {/* Left half for .5 ratings */}
+            <div
+              className="absolute left-0 w-1/2 h-full z-10"
+              onMouseEnter={() => setHover(star - 0.5)}
+              onMouseLeave={() => setHover(null)}
+              onClick={() => setRating(star - 0.5)}
+            />
+            {/* Right half for full ratings */}
+            <div
+              className="absolute right-0 w-1/2 h-full z-10"
+              onMouseEnter={() => setHover(star)}
+              onMouseLeave={() => setHover(null)}
+              onClick={() => setRating(star)}
+            />
+            {/* Visual representation */}
+            <div className="text-xl">
+              {(hover || rating) >= star ? (
+                <FaStar className="text-yellow-400" />
+              ) : (hover || rating) >= star - 0.5 ? (
+                <FaStarHalfAlt className="text-yellow-400" />
+              ) : (
+                <FaRegStar className="text-gray-300" />
+              )}
+            </div>
+          </div>
+        ))}
+        {rating > 0 && (
+          <span className="ml-2 text-sm font-semibold">{rating} Stars</span>
+        )}
+      </div>
+    );
   };
 
   const formatDate = (dateString) => {
@@ -245,7 +319,7 @@ export function ProductDetails() {
                 )}
               </div>
             </div>
-            <div className="px-4 w-full md:w-fit md:mr-auto">
+            <div className="px-4 w-full md:w-full md:mr-auto">
               <div className="mb-5 pb-3 border-b border-gray-400">
                 <h1 className="uppercase text-[20px] pb-2">{prod.product}</h1>
                 <div className="py-1 hidden">Tags</div>
@@ -373,7 +447,7 @@ export function ProductDetails() {
                   Free shipping on order above 2000/-
                 </p>
                 <p className="text-sm font-medium mb-5">{prod?.description}</p>
-                <p className="text-[12px] font-light">
+                {/* <p className="text-[12px] font-light">
                   Punch up your look with This set, a white design on a nude
                   base and chrome finish, elevated with a long length.
                 </p>
@@ -465,7 +539,7 @@ export function ProductDetails() {
                     <p className="mb-4">- Card with written instructions</p>
                     <p className="mb-4">- QR code to a video tutorial</p>
                   </div>
-                </details>
+                </details> */}
               </div>
             </div>
           </div>
@@ -480,82 +554,93 @@ export function ProductDetails() {
               <ProductList amt={5} layout={"flex"} />
             </IconSlider>
           </div>
-          <div className=" my-5 md:my-8 md:mx-40 px-5">
-            Product Reviews
+          <div className="my-10 md:my-16 md:mx-40 px-5">
+            <div className="flex justify-between items-center mb-8 border-b pb-4">
+              <h2 className="text-2xl font-bold uppercase tracking-wider">
+                Product Reviews
+              </h2>
+              {productComments && productComments.length > 0 && (
+                <button
+                  onClick={() => setAddCommentPopup(!addCommentPopup)}
+                  className="bg-black text-white px-6 py-2 text-sm font-semibold hover:bg-gray-800 transition-colors rounded-md"
+                >
+                  {addCommentPopup ? "Cancel" : "Add Review"}
+                </button>
+              )}
+            </div>
+
             {addCommentPopup && (
-              <div className="border border-black">
-                <div>
-                  <label>Title</label>
-                  <input
-                    onChange={(e) => setTitle(e.target.value)}
-                    type="text"
-                    placeholder="title"
-                  ></input>
-                  <label>Rating</label>
-                  <input
-                    onChange={(e) => setRating(e.target.value)}
-                    type="text"
-                    placeholder="rating"
-                  ></input>
-                  <label>Comment</label>
-                  <input
-                    onChange={(e) => setComment(e.target.value)}
-                    type="text"
-                    placeholder="comment"
-                  ></input>
-                  <button onClick={() => handleComment(prod?.product_id)}>
-                    Add Comment
+              <div className="mb-10 p-6 border border-gray-200 bg-gray-50 rounded-lg shadow-sm">
+                <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium mb-1">Title</label>
+                    <input
+                      onChange={(e) => setTitle(e.target.value)}
+                      type="text"
+                      className="border p-2 rounded focus:outline-none focus:ring-1 focus:ring-black"
+                      placeholder="Review title"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium mb-1">Rating</label>
+                    <StarRatingInput rating={rating} setRating={setRating} />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium mb-1">Comment</label>
+                    <textarea
+                      onChange={(e) => setComment(e.target.value)}
+                      className="border p-2 rounded h-24 focus:outline-none focus:ring-1 focus:ring-black"
+                      placeholder="Share your thoughts about this product..."
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleComment(prod?.product_id)}
+                    className="bg-black text-white py-3 font-bold uppercase tracking-widest hover:opacity-90 mt-2 rounded-md"
+                  >
+                    Post Review
                   </button>
                 </div>
               </div>
             )}
-            <button
-              onClick={() =>
-                addCommentPopup
-                  ? setAddCommentPopup(false)
-                  : setAddCommentPopup(true)
-              }
-            >
-              Add Review
-            </button>
-            {productComments && (
-              <div className="grid grid-cols-1 gap-3 ">
-                {productComments?.map((comment, i) => (
+
+            {productComments && productComments.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {productComments.slice(0, 3).map((comment, i) => (
                   <div key={i}>
                     <div
                       id="Comment"
-                      key={i}
-                      className="border px-4.5 py-4 overflow-hidden"
+                      className="border px-5 py-5 overflow-hidden bg-white hover:border-black transition-colors"
                     >
-                      <div className="mb-4 flex sm:flex justify-between">
-                        <div id="Stars" className="font-bold">
-                          {comment.rating} / 5
+                      <div className="mb-4 flex justify-between items-center">
+                        <div id="Stars">
+                          <StarRating rating={comment.rating} showText={true} />
                         </div>
-                        <div id="date" className="font-extralight text-gray">
+                        <div id="date" className="font-extralight text-gray-500 text-sm">
                           {formatDate(comment.comment_date)}
                         </div>
                       </div>
                       <div className="mb-6">
-                        <p id="Subject / order" className="font-semibold mb-3">
+                        <p id="Subject" className="font-semibold mb-2">
                           {comment.title}
                         </p>
-                        <p id="Content" className="font-light text-wrap h-fit">
+                        <p id="Content" className="font-light text-gray-700 h-fit">
                           {comment.comment}
                         </p>
                       </div>
-                      <div className="border-t pt-3 flex justify-between items-center">
-                        <div className="flex text-sm">
+                      <div className="border-t pt-4 flex justify-between items-center">
+                        <div className="flex text-sm items-center">
                           <div
                             id="User-profile"
-                            className="h-10 w-10 flex shrink-0 border rounded-full p-3 items-center mr-3"
+                            className="h-10 w-10 flex shrink-0 border rounded-full p-2.5 items-center justify-center mr-3 text-gray-400"
                           >
                             <FaUser />
                           </div>
                           <div className="flex flex-col truncate">
-                            <a className="">{comment.user}</a>
-                            <a className="text-left font-light">
+                            <span className="font-medium">{comment.user}</span>
+                            <span className="text-xs text-gray-400">
                               {comment.product_name}
-                            </a>
+                            </span>
                           </div>
                         </div>
                         <div className="shrink-0 link-img">
@@ -571,6 +656,30 @@ export function ProductDetails() {
                     </div>
                   </div>
                 ))}
+                {productComments.length > 3 && (
+                  <button
+                    onClick={() => {/* Maybe scroll to all reviews or expand */ }}
+                    className="text-center mt-4 text-sm font-light text-gray-500 hover:text-black"
+                  >
+                    + View {productComments.length - 3} more reviews
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                <div className="bg-white p-4 rounded-full shadow-sm mb-4">
+                  <FaStar className="text-gray-300 text-4xl" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2 font-serif">No Reviews Yet</h3>
+                <p className="text-gray-500 mb-8 text-center max-w-xs">
+                  Your opinion matters! Be the first to review this product and share your experience.
+                </p>
+                <button
+                  onClick={() => setAddCommentPopup(true)}
+                  className="bg-black text-white px-10 py-4 text-sm font-bold uppercase tracking-[0.2em] hover:bg-gray-800 transition-all shadow-lg rounded-md"
+                >
+                  Write First Review
+                </button>
               </div>
             )}
           </div>

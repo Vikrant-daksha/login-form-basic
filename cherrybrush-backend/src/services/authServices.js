@@ -766,7 +766,23 @@ export const getAllDiscountCoupon = async () => {
 };
 
 export const getAdminDiscountCoupons = async () => {
-  const { rows } = await query(`SELECT * FROM discount_coupons`);
+  const { rows } = await query(
+    `SELECT
+      dcn.id AS id,
+      dcn.created_at AS created_at,
+      dcn.current_usage_count AS current_usage_count,
+      dcn.discount_code AS discount_code,
+      dcn.discount_description AS discount_description,
+      dcn.discount_percent AS discount_percent,
+      dcn.discount_price AS discount_price,
+      dcn.expires_at AS expires_at,
+      dcn.max_redemption AS max_redemption,
+      dcn.redemption_per_user AS redemption_per_user,
+      dcn.referal_id AS referal_id,
+      usr.username AS creator_name
+    FROM discount_coupons dcn
+    LEFT JOIN users usr ON usr.id = dcn.referal_id`
+  );
 
   return rows;
 };
@@ -962,4 +978,41 @@ export const removeCartCoupon = async (user_id) => {
   );
 
   return rows[0];
+};
+
+export const uploadGalleryImage = async (filesArray, imgName) => {
+  const titles = Array.isArray(imgName) ? imgName : [imgName];
+  const uploads = filesArray.map((file, i) =>
+    cloudinary.uploader.upload(file.path, {
+      folder: `gallery/`,
+      public_id: `${titles[i]}`,
+    })
+  );
+
+  const results = await Promise.all(uploads);
+
+  return results.map((r) => r.secure_url);
+};
+
+export const getGallery = async (cursor) => {
+  let query = cloudinary.search
+    .expression(`folder:gallery/*`)
+    .sort_by("created_at", "desc");
+
+  if (cursor) {
+    query = query.next_cursor(cursor);
+  }
+
+  const gallery = await query.execute();
+
+  return {
+    resources: gallery.resources,
+    next_cursor: gallery.next_cursor,
+  };
+};
+
+export const deleteGalleryImage = async (asset_id) => {
+  const image = await cloudinary.api.delete_resources_by_asset_ids([asset_id]);
+
+  return image;
 };

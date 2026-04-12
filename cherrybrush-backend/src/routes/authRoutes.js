@@ -230,4 +230,21 @@ router.get(
   authController.getCreatorCoupon
 );
 
+router.post(
+  "/gallery/add",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  uploadMiddleware.uploadImage,
+  authController.addToGallery
+);
+
+router.get("/gallery", authController.getGallery);
+
+router.delete(
+  "/gallery/delete/:assetId",
+  authMiddleware.loginRequire,
+  adminMiddleware.adminRole,
+  authController.deleteFromGallery
+);
+
 export default router;

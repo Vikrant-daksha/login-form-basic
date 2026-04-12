@@ -192,7 +192,7 @@ function Cart() {
 
   if (cart.length == 0) {
     return (
-      <div className="h-[65vh] bg-gray-50">
+      <div className="h-[89vh] bg-gray-50">
         <div
           id="cart-items"
           className="h-full w-full flex justify-center items-center"

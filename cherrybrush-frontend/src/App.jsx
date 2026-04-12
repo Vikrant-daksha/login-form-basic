@@ -29,6 +29,7 @@ import AdminOrders from "./pages/AdminOrders.jsx";
 import DiscountPage from "./pages/DiscountPage.jsx";
 import CreatorComission from "./pages/CreatorComissions.jsx";
 import AllUsers from "./pages/AllUsers.jsx";
+import { Gallery } from "./pages/Gallery.jsx";
 
 function App() {
   const { user, loading } = useAuth();
@@ -89,6 +90,7 @@ function App() {
           <Route path="/collections" element={<Collections />} />
           <Route path="/" element={<Home />} />
           <Route path="/catalog" element={<Catalog />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/products/:slug" element={<ProductDetails />} />
           <Route

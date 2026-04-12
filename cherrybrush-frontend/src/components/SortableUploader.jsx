@@ -25,7 +25,7 @@ function SortableItem({ file, id, remove }) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className="relative"
+      className="relative border border-primary rounded-lg"
     >
       <img
         id={id}
@@ -58,6 +58,7 @@ export default function SortableUploader({ files, setFiles }) {
     const mapped = dropped.map((f) => ({
       id: crypto.randomUUID(),
       file: f,
+      title: "",
     }));
 
     setFiles((prev) => [...prev, ...mapped]);

@@ -6,7 +6,13 @@ import HalfBanner from "../assets/BannerHalf.png";
 import prodimg from "../assets/Product-img.webp";
 import robo from "../assets/cyborg.jpeg";
 import PImage from "../assets/Product-img.webp";
-import { FaUser } from "react-icons/fa6";
+import {
+  FaUser,
+  FaStar,
+  FaStarHalfAlt,
+  FaRegStar,
+  FaChevronRight,
+} from "react-icons/fa";
 import { IconSlider } from "../components/Carousel.jsx";
 import { ProductList } from "../components/ProductList.jsx";
 import api from "../api/axiosinstance.jsx";
@@ -19,6 +25,34 @@ export function Home() {
 
   const [radius, setRadius] = useState(window.innerWidth < 640 ? 200 : 400);
   const [items, setItems] = useState(window.innerWidth < 640 ? 4 : 10);
+  const [visibleCount, setVisibleCount] = useState(3);
+
+  const StarRating = ({ rating, showText = false }) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 1; i <= 5; i++) {
+      if (i <= fullStars) {
+        stars.push(<FaStar key={i} className="text-yellow-400" />);
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars.push(<FaStarHalfAlt key={i} className="text-yellow-400" />);
+      } else {
+        stars.push(<FaRegStar key={i} className="text-gray-300" />);
+      }
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex gap-0.5">{stars}</div>
+        {showText && (
+          <span className="text-sm font-medium text-gray-600">
+            {rating} / 5
+          </span>
+        )}
+      </div>
+    );
+  };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -118,74 +152,114 @@ export function Home() {
           <ProductList amt={0} layout={"flex"} />
         </IconSlider>
       </div>
-      <div id="Comments" className="mt-16 mb-12 px-6">
-        <div className="mt-12 mb-8  text-center">
-          <p className="font-semibold">Review from our customers</p>
-          <p id="Overall-Rating" className="">
-            4.2
+      <div id="Comments" className="mt-20 mb-16 md:mx-40 px-6">
+        <div className="mb-12 text-center flex flex-col items-center">
+          <p className="text-sm uppercase tracking-widest text-gray-400 mb-2">
+            Our Community
           </p>
-          <p className="text-[12px] font-light">Overall Reviews</p>
+          <h2 className="text-3xl font-bold uppercase mb-4">
+            Reviews from our customers
+          </h2>
+          <div className="flex items-center gap-4 bg-gray-50 px-6 py-3 rounded-full border border-gray-100 shadow-sm">
+            <span id="Overall-Rating" className="text-2xl font-bold">
+              4.2
+            </span>
+            <StarRating rating={4.2} />
+            <span className="text-xs font-light text-gray-500 uppercase tracking-widest border-l pl-4">
+              Overall Reviews
+            </span>
+          </div>
         </div>
+
         {productComments && (
-          <div
-            id="Comment-slider"
-            className="grid gap-4 grid-cols-1 md:grid-cols-3 overflow-x-hidden "
-          >
-            {productComments?.map((comment, i) => (
-              <div key={i}>
-                <div
-                  id="Comment"
-                  key={i}
-                  className="border px-4.5 py-4 overflow-hidden"
-                >
-                  <div className="mb-4 flex sm:flex justify-between">
-                    <div id="Stars" className="font-bold">
-                      {comment.rating} / 5
-                    </div>
-                    <div id="date" className="font-extralight text-gray">
-                      {formatDate(comment.comment_date)}
-                    </div>
-                  </div>
-                  <div className="mb-6">
-                    <p id="Subject / order" className="font-semibold mb-3">
-                      {comment.title}
-                    </p>
-                    <p id="Content" className="font-light text-wrap h-fit">
-                      {comment.comment}
-                    </p>
-                  </div>
-                  <div className="border-t pt-3 flex justify-between items-center">
-                    <div className="flex text-sm">
-                      <div
-                        id="User-profile"
-                        className="h-10 w-10 flex shrink-0 border rounded-full p-3 items-center mr-3"
-                      >
-                        <FaUser />
+          <div className="relative">
+            <div
+              id="Comment-slider"
+              className="grid gap-6 grid-cols-1 md:grid-cols-3 transition-all duration-500"
+            >
+              {productComments?.slice(0, visibleCount).map((comment, i) => (
+                <div key={i} className="h-full">
+                  <div
+                    id="Comment"
+                    className="border px-5 py-6 overflow-hidden h-full flex flex-col justify-between bg-white hover:border-black transition-colors"
+                  >
+                    <div>
+                      <div className="mb-4 flex justify-between items-center">
+                        <div id="Stars">
+                          <StarRating rating={comment.rating} showText={true} />
+                        </div>
+                        <div
+                          id="date"
+                          className="font-extralight text-gray-400 text-xs"
+                        >
+                          {formatDate(comment.comment_date)}
+                        </div>
                       </div>
-                      <div className="flex flex-col truncate">
-                        <a className="">{comment.user}</a>
-                        <a className="text-left font-light">
-                          {comment.product_name}
-                        </a>
+                      <div className="mb-6">
+                        <p
+                          id="Subject"
+                          className="font-semibold mb-2 capitalize"
+                        >
+                          {comment.title}
+                        </p>
+                        <p
+                          id="Content"
+                          className="font-light text-gray-700 text-sm italic"
+                        >
+                          "{comment.comment}"
+                        </p>
                       </div>
                     </div>
-                    <div className="shrink-0 link-img">
-                      <Link to={`/products/${comment.product_slug}`}>
-                        <img
-                          src={comment.product_images?.[0]}
-                          width={40}
-                          height={40}
-                        ></img>
-                      </Link>
+
+                    <div className="border-t pt-4 flex justify-between items-center mt-auto">
+                      <div className="flex text-sm items-center">
+                        <div
+                          id="User-profile"
+                          className="h-9 w-9 flex shrink-0 border rounded-full p-2.5 items-center justify-center mr-3 text-gray-300"
+                        >
+                          <FaUser />
+                        </div>
+                        <div className="flex flex-col truncate">
+                          <span className="font-medium text-xs">
+                            {comment.user}
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            Verified Buyer
+                          </span>
+                        </div>
+                      </div>
+                      <div className="shrink-0 link-img">
+                        <Link to={`/products/${comment.product_slug}`}>
+                          <img
+                            src={comment.product_images?.[0]}
+                            width={40}
+                            height={40}
+                            className="object-cover rounded grayscale hover:grayscale-0 transition-all"
+                            alt="product"
+                          />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            {productComments.length > visibleCount && (
+              <div className="mt-10 flex justify-center">
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 3)}
+                  className="flex items-center gap-3 bg-black text-white px-8 py-4 text-sm font-bold uppercase tracking-[0.2em] hover:bg-gray-800 transition-all shadow-lg group"
+                >
+                  Load More Reviews
+                  <FaChevronRight className="group-hover:translate-x-2 transition-transform" />
+                </button>
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
-      <div className="bg-pink-200 py-16 px-10 text-center text-[16px] xl:px-40">
+      {/* <div className="bg-pink-200 py-16 px-10 text-center text-[16px] xl:px-40">
         <div className="py-7 text-[12px]">MEET CHERRYBRUSH</div>
         <div className="flex flex-wrap sm:text-2xl lg:px-40">
           A high design nail art studio based in NYC, Paintbox transcends and
@@ -305,7 +379,7 @@ export function Home() {
             SUBSCRIBE
           </button>
         </form>
-      </div>
+      </div> */}
     </>
   );
 }

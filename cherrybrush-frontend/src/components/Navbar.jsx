@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
 import "../App.css";
@@ -20,32 +20,182 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [accountOverlay, setAccountOverlay] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { user, logout } = useAuth();
 
+  useEffect(() => {
+    setAccountOverlay(false);
+    setIsOpen(false);
+  }, [location]);
+
   const handleRedirect = async (link) => {
     navigate(`${link}`);
+    setAccountOverlay(false);
+    setIsOpen(false);
   };
 
   const handleLogout = () => {
     logout();
+    setAccountOverlay(false);
+    setIsOpen(false);
     navigate("/login");
   };
 
   return (
     <>
+      <div className="sticky top-0 z-50 w-full">
+        {/* New Minimalist Navbar */}
+        <nav className="bg-black/95 backdrop-blur-md border-b border-white/10 px-6 md:px-12 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            {/* Left: Logo */}
+            <div className="flex-shrink-0">
+              <Link to="/" className="flex items-center">
+                <img src="/logo.gif" alt="Logo" className="h-8 md:h-10 brightness-110" />
+                <span className="ml-3 text-white font-semibold tracking-[0.3em] uppercase hidden md:inline text-sm">Websell</span>
+              </Link>
+            </div>
+
+            {/* Center: Navigation Links */}
+            <div className="hidden lg:flex items-center gap-10">
+              <Link to="/catalog" className="text-[11px] font-bold text-gray-300 uppercase tracking-[0.2em] hover:text-white transition-colors relative group">
+                Browse
+                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+              <Link to="/gallery" className="text-[11px] font-bold text-gray-300 uppercase tracking-[0.2em] hover:text-white transition-colors relative group">
+                Product Gallery
+                <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            </div>
+
+            {/* Right: Icons & Actions */}
+            <div className="flex items-center gap-6">
+              <Link to="/cart" className="text-white hover:text-gray-400 transition-colors relative">
+                <FaCartShopping size={18} />
+                {/* Optional cart badge could go here */}
+              </Link>
+
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setAccountOverlay(!accountOverlay)}
+                    className="flex items-center gap-2 group"
+                  >
+                    <div className="h-8 w-8 rounded-full border border-white/20 flex items-center justify-center text-white group-hover:border-white transition-all">
+                      <User2 size={16} />
+                    </div>
+                  </button>
+
+                  {/* Enhanced Dropdown */}
+                  {accountOverlay && (
+                    <div className="absolute right-0 mt-4 w-72 bg-white rounded-xl shadow-2xl py-2 border border-gray-100 overflow-hidden text-sm slide-in-top">
+                      {/* User Info Header */}
+                      <div className="px-6 py-5 bg-gray-50/50 border-b border-gray-100 mb-2 flex justify-between">
+                        <div>
+                          <p className="font-bold text-black uppercase tracking-widest text-xs">{user.username}</p>
+                          <p className="text-gray-500 text-[11px] truncate mt-1">{user.email || user.phone_no}</p>
+                        </div>
+                        <div className="flex items-center w-fit h-fit px-3 py-2.5 bg-black text-white text-[9px] uppercase tracking-tighter rounded-md">
+                          {user.role}
+                        </div>
+                      </div>
+
+                      {/* Store Management (Admins) */}
+                      {user.role === "admin" && (
+                        <div className="px-2 py-1">
+                          <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Studio Management</p>
+                          <DropdownItem icon={<LuPackage />} label="Add Product" onClick={() => handleRedirect("/product")} />
+                          <DropdownItem icon={<LuClipboardList />} label="All Orders" onClick={() => handleRedirect("/admin/orders")} />
+                          <DropdownItem icon={<LuUsersRound />} label="User Base" onClick={() => handleRedirect("/users")} />
+                          <DropdownItem icon={<MdDiscount />} label="Promotions" onClick={() => handleRedirect("/discount")} />
+                        </div>
+                      )}
+
+                      {/* Creator Options */}
+                      {(user.role === "admin" || user.role === "creator") && (
+                        <div className="px-2 py-1 border-t border-gray-50">
+                          <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Creator Options</p>
+                          <DropdownItem icon={<GiMoneyStack />} label="Commissions" onClick={() => handleRedirect("/comissions")} />
+                        </div>
+                      )}
+
+                      {/* General Account */}
+                      <div className="px-2 py-1 border-t border-gray-50">
+                        <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Account Settings</p>
+                        <DropdownItem icon={<User2 size={16} />} label="My Account" onClick={() => handleRedirect("/account")} />
+                        <DropdownItem icon={<LuHistory />} label="Order History" onClick={() => handleRedirect("/order-history")} />
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors rounded-lg font-medium"
+                        >
+                          <LuLogOut size={16} /> Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link to="/login" className="text-[11px] font-bold text-white uppercase tracking-[0.2em] border border-white/30 px-5 py-2 hover:bg-white hover:text-black transition-all">
+                  Sign In
+                </Link>
+              )}
+
+              {/* Mobile Menu Toggle */}
+              <button
+                onClick={() => setIsOpen(true)}
+                className="lg:hidden text-white"
+              >
+                <GiHamburgerMenu size={24} />
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Mobile Sidebar */}
+        <div className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
+          <div className={`absolute right-0 top-0 h-full w-4/5 max-w-sm bg-white shadow-2xl transition-transform duration-500 transform ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+            <div className="flex flex-col h-full">
+              <div className="flex justify-between items-center p-6 border-b">
+                <span className="font-bold tracking-widest uppercase text-sm">Menu</span>
+                <button onClick={() => setIsOpen(false)}><IoClose size={28} /></button>
+              </div>
+
+              <div className="p-8 space-y-8 flex-grow">
+                <MobileNavItem label="Browse Products" to="/catalog" onClick={() => setIsOpen(false)} />
+                <MobileNavItem label="Inspiration Gallery" to="/gallery" onClick={() => setIsOpen(false)} />
+                <MobileNavItem label="Latest Arrivals" to="/catalog?category=new" onClick={() => setIsOpen(false)} />
+              </div>
+
+              {user && (
+                <div className="p-8 border-t bg-gray-50">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="h-10 w-10 bg-black rounded-full flex items-center justify-center text-white italic font-serif">
+                      {user.username.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-bold uppercase tracking-widest text-xs">{user.username}</p>
+                      <button onClick={handleLogout} className="text-red-500 text-[10px] uppercase font-bold tracking-tighter mt-1">Logout Account</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legacy Navbar (Commented Out)
       <div className="sticky top-0 z-10 w-full leading-none">
         <nav className="py-1.5 bg-black">
-          <div className="flex items-center justify-between min-h-14 lg:justify-evenly">
+          <div className="flex items-center min-h-14 justify-center-safe">
             <div className="text-2xl px-8">
               <Link to="/" className="font-bold">
                 <img src="/logo.gif" alt="Cherrybrush" className="h-10" />
               </Link>
             </div>
-            <div className="hidden justify-between text-gray-200 align-middle m-1.5 sm:flex">
-              <ul className="flex flex-wrap mr-3">
-                <li
-                  className="px-2.5 py-2 relative
+            <div className="hidden text-gray-200 m-1.5 sm:flex">
+              <div
+                className="px-2.5 py-2 relative
   after:content-['']
   after:absolute
   after:left-0
@@ -56,59 +206,8 @@ export function Navbar() {
   after:transition-all
   after:duration-300
   hover:after:w-full"
-                >
-                  <Link to="/catalog">Press On Nails</Link>
-                </li>
-                <li
-                  className="px-2.5 py-2 relative
-  after:content-['']
-  after:absolute
-  after:left-0
-  after:bottom-0
-  after:h-[2px]
-  after:w-0
-  after:bg-current
-  after:transition-all
-  after:duration-300
-  hover:after:w-full"
-                >
-                  Custom Press Ons
-                </li>
-                <li
-                  className="px-2.5 py-2 relative
-  after:content-['']
-  after:absolute
-  after:left-0
-  after:bottom-0
-  after:h-[2px]
-  after:w-0
-  after:bg-current
-  after:transition-all
-  after:duration-300
-  hover:after:w-full"
-                >
-                  Nail Polish
-                </li>
-                <li
-                  className="px-2.5 py-2 relative
-  after:content-['']
-  after:absolute
-  after:left-0
-  after:bottom-0
-  after:h-[2px]
-  after:w-0
-  after:bg-current
-  after:transition-all
-  after:duration-300
-  hover:after:w-full"
-                >
-                  Nail Care
-                </li>
-              </ul>
-              <div className="flex align-middle flex-wrap">
-                <button className="border border-white px-3.5">
-                  Book A Manicure
-                </button>
+              >
+                <Link to="/catalog">Browse Products</Link>
               </div>
             </div>
             <div className="hidden text-gray-200 sm:flex pr-7">
@@ -170,96 +269,6 @@ export function Navbar() {
                               Cart
                             </button>
                           </div>
-                          <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
-                            <button
-                              className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
-                              onClick={() => {
-                                handleRedirect("/order-history");
-                                setAccountOverlay(false);
-                              }}
-                            >
-                              <LuHistory className="h-5 mr-3" />
-                              Order History
-                            </button>
-                          </div>
-                          {user?.role === "admin" && (
-                            <>
-                              <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
-                                <button
-                                  className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
-                                  onClick={() => {
-                                    handleRedirect("/product");
-                                    setAccountOverlay(false);
-                                  }}
-                                >
-                                  <LuPackage className="h-5 mr-3" />
-                                  Add Product
-                                </button>
-                              </div>
-                              <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
-                                <button
-                                  className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
-                                  onClick={() => {
-                                    handleRedirect("/admin/orders");
-                                    setAccountOverlay(false);
-                                  }}
-                                >
-                                  <LuClipboardList className="h-5 mr-3" />
-                                  All Orders
-                                </button>
-                              </div>
-                              <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
-                                <button
-                                  className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
-                                  onClick={() => {
-                                    handleRedirect("/users");
-                                    setAccountOverlay(false);
-                                  }}
-                                >
-                                  <LuUsersRound className="h-5 mr-3" />
-                                  All Users
-                                </button>
-                              </div>
-                              <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
-                                <button
-                                  className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
-                                  onClick={() => {
-                                    handleRedirect("/discount");
-                                    setAccountOverlay(false);
-                                  }}
-                                >
-                                  <MdDiscount className="h-5 mr-3" />
-                                  Discount Coupons
-                                </button>
-                              </div>
-                            </>
-                          )}
-                          {(user?.role === "admin" || user?.role === "creator") && (
-                            <div className="flex justify-start items-center hover:bg-gray-300 rounded-full">
-                              <button
-                                className="w-full px-3 py-3 flex justify-start items-center text-[1rem] hover:bg-gray-300 rounded-full"
-                                onClick={() => {
-                                  handleRedirect("/comissions");
-                                  setAccountOverlay(false);
-                                }}
-                              >
-                                <GiMoneyStack className="h-5 mr-3" />
-                                Creator Comissions
-                              </button>
-                            </div>
-                          )}
-                          <div className="flex justify-start items-center rounded-full my-4 ">
-                            <button
-                              className="w-full px-3 py-3 flex justify-center border hover:text-secondary border-white items-center hover:bg-primary text-[1rem] hover:cursor-pointer bg-secondary text-primary rounded-full transition-all ease-in-out"
-                              onClick={() => {
-                                handleLogout();
-                                setAccountOverlay(false);
-                              }}
-                            >
-                              <LuLogOut className="h-5 mr-3" />
-                              Logout
-                            </button>
-                          </div>
                         </div>
                       </div>
                     )}
@@ -271,196 +280,35 @@ export function Navbar() {
                 </Link>
               )}
             </div>
-            <div className="flex items-center">
-              <Link to="/cart" className="sm:hidden mr-4 text-xl">
-                <FaCartShopping className="text-white" />
-              </Link>
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="sm:hidden mr-4 text-2xl p-1.5"
-              >
-                <GiHamburgerMenu className="text-white" />
-              </button>
-            </div>
-          </div>
-          <div
-            className={`${
-              isOpen ? "translate-x-0" : "translate-x-full"
-            } min-h-dvh w-full fixed top-0 right-0 font-extralight z-50`}
-          >
-            <div
-              id="slide"
-              className=" flex min-h-dvh flex-col sm:hidden bg-gray-200 "
-            >
-              <div className="w-full text-end my-2">
-                <button
-                  onClick={() => setIsOpen(!isOpen)}
-                  className="mr-4 text-3xl"
-                >
-                  <IoClose />
-                </button>
-              </div>
-              <button className="border border-white py-2 mx-4 mb-1">
-                Book A Manicure
-              </button>
-              <ul className="">
-                <li className="px-5 py-2.5 border-b border-white">
-                  <Link
-                    to="/catalog"
-                    onClick={() => setIsOpen(false)}
-                    className="block w-full"
-                  >
-                    Press On Nails
-                  </Link>
-                </li>
-                <li className="px-5 py-2.5 border-b border-white">Custom</li>
-                <li className="px-5 py-2.5 border-b border-white">
-                  Nail Polish
-                </li>
-                <li className="px-5 py-2.5 border-b border-white">Nail Care</li>
-              </ul>
-              {user ? (
-                <>
-                  <div>
-                    <button
-                      onClick={() => {
-                        accountOverlay
-                          ? setAccountOverlay(false)
-                          : setAccountOverlay(true);
-                      }}
-                      className="w-full flex items-center py-2.5 px-5 border-b border-white"
-                    >
-                      <User2 className="mr-2 p-0.5 border border-black rounded-full" />
-                      {user?.username || "Account"}
-                    </button>
-                  </div>
-                  <div className="mb-4">
-                    {accountOverlay && (
-                      <div className="ml-6 bg-gray-300">
-                        <button
-                          onClick={() => {
-                            handleRedirect("/account");
-                            setAccountOverlay(false);
-                            setIsOpen(false);
-                          }}
-                          className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
-                        >
-                          <User2 className="mr-2 p-0.5 h-5 w-5" />
-                          Account
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleRedirect("/cart");
-                            setAccountOverlay(false);
-                            setIsOpen(false);
-                          }}
-                          className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
-                        >
-                          <FaCartShopping className="mr-2 p-0.5 h-5 w-5" />
-                          Cart
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleRedirect("/order-history");
-                            setAccountOverlay(false);
-                            setIsOpen(false);
-                          }}
-                          className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
-                        >
-                          <LuHistory className="mr-2 p-0.5 h-5 w-5" />
-                          Order History
-                        </button>
-                        {user?.role === "admin" && (
-                          <>
-                            <button
-                              onClick={() => {
-                                handleRedirect("/product");
-                                setAccountOverlay(false);
-                                setIsOpen(false);
-                              }}
-                              className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
-                            >
-                              <LuPackage className="mr-2 p-0.5 h-5 w-5" />
-                              Add Product
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleRedirect("/admin/orders");
-                                setAccountOverlay(false);
-                                setIsOpen(false);
-                              }}
-                              className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
-                            >
-                              <LuClipboardList className="mr-2 p-0.5 h-5 w-5" />
-                              All Orders
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleRedirect("/users");
-                                setAccountOverlay(false);
-                                setIsOpen(false);
-                              }}
-                              className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
-                            >
-                              <LuUsersRound className="mr-2 p-0.5 h-5 w-5" />
-                              All Users
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleRedirect("/discount");
-                                setAccountOverlay(false);
-                                setIsOpen(false);
-                              }}
-                              className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
-                            >
-                              <MdDiscount className="mr-2 p-0.5 h-5 w-5" />
-                              Discount Coupons
-                            </button>
-                          </>
-                        )}
-                        {(user?.role === "admin" || user?.role === "creator") && (
-                          <button
-                            onClick={() => {
-                              handleRedirect("/comissions");
-                              setAccountOverlay(false);
-                              setIsOpen(false);
-                            }}
-                            className="w-full flex items-center py-2.5 px-5 border-b border-white hover:bg-gray-400"
-                          >
-                            <GiMoneyStack className="mr-2 p-0.5 h-5 w-5" />
-                            Creator Comissions
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex justify-start px-4">
-                    <button
-                      onClick={() => handleLogout()}
-                      className="flex justify-center items-center-safe text-lg font-light text-12 px-2.5 py-0.5 rounded-xl bg-red-500 text-white"
-                    >
-                      <LuLogOut className="mr-1" />
-                      Logout
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <Link
-                  to="/login"
-                  className="block text-sm text-left py-1.5 px-5 mt-3"
-                >
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="w-full h-full text-left"
-                  >
-                    Login
-                  </button>
-                </Link>
-              )}
-            </div>
           </div>
         </nav>
-      </div>
+      </div>    
+      */}
     </>
+  );
+}
+
+// Helper Components for the new design
+function DropdownItem({ icon, label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-black transition-colors rounded-lg group"
+    >
+      <span className="text-gray-400 group-hover:text-black transition-colors">{icon}</span>
+      <span className="font-medium">{label}</span>
+    </button>
+  );
+}
+
+function MobileNavItem({ label, to, onClick }) {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className="block text-2xl font-bold uppercase tracking-tighter text-black hover:text-gray-500 transition-colors"
+    >
+      {label}
+    </Link>
   );
 }

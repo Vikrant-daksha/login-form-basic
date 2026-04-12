@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import AsyncSelect from "react-select/async";
 import api from "../api/axiosinstance";
+import { MdDiscount } from "react-icons/md";
+import { LucideUser2 } from "lucide-react";
 
 function DiscountPage() {
   const [code, setCode] = useState("");
@@ -13,6 +15,14 @@ function DiscountPage() {
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [coupons, setCoupons] = useState([]);
+  const [activeTab, setActiveTab] = useState("Active Coupons");
+
+  const tabs = [
+    "Active Coupons",
+    "Creator Coupon",
+    "Used Coupons",
+    "Expired Coupons",
+  ];
 
   useEffect(() => {
     const getAllCoupons = async () => {
@@ -34,7 +44,7 @@ function DiscountPage() {
       const res = await api.get(`/api/auth/get-user/search?q=${searchThis}`);
       return res.data.map((user) => ({
         value: user.user_id,
-        label: `User: ${user.username} (${user.email})`,
+        label: `${user.username} (${user.email})`,
       }));
     } catch (e) {
       console.error(e);
@@ -80,8 +90,30 @@ function DiscountPage() {
   };
 
   useEffect(() => {
-    console.log("Coupon:", coupons);
+    console.log("Coupons Loaded:", coupons);
   }, [coupons]);
+
+  const filteredCoupons = coupons.filter((coupon) => {
+    const now = new Date();
+    const expiresAt = coupon.expires_at ? new Date(coupon.expires_at) : null;
+    const isExpired = expiresAt && expiresAt < now;
+    const isFullyUsed =
+      coupon.max_redemption &&
+      coupon.current_usage_count >= coupon.max_redemption;
+
+    switch (activeTab) {
+      case "Active Coupons":
+        return !isExpired && !isFullyUsed;
+      case "Creator Coupon":
+        return coupon.referal_id !== null;
+      case "Used Coupons":
+        return isFullyUsed;
+      case "Expired Coupons":
+        return isExpired;
+      default:
+        return true;
+    }
+  });
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-12">
@@ -107,21 +139,9 @@ function DiscountPage() {
             </div>
 
             {/* Description */}
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold text-gray-700 mb-1">
-                Description
-              </label>
-              <input
-                type="text"
-                placeholder="Brief details about the coupon"
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
 
             {/* Price Discount */}
-            <div className="flex flex-col">
+            <div className="flex flex-col w-full">
               <label className="text-sm font-semibold text-gray-700 mb-1">
                 Discount Amount ($)
               </label>
@@ -134,7 +154,19 @@ function DiscountPage() {
               />
             </div>
 
-            {/* Percent Discount */}
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-700 mb-1">
+                Description
+              </label>
+              <input
+                type="text"
+                placeholder="Brief details about the coupon"
+                value={desc}
+                onChange={(e) => setDesc(e.target.value)}
+                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+            {/* Percent Discount
             <div className="flex flex-col">
               <label className="text-sm font-semibold text-gray-700 mb-1">
                 Discount Percent (%)
@@ -146,7 +178,7 @@ function DiscountPage() {
                 onChange={(e) => setPercent(e.target.value)}
                 className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
-            </div>
+            </div> */}
 
             {/* Expire Date */}
             <div className="flex flex-col">
@@ -210,7 +242,7 @@ function DiscountPage() {
           <div className="flex justify-end pt-4">
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition duration-200"
+              className="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-green-700 transition duration-200"
             >
               Create Coupon
             </button>
@@ -218,42 +250,140 @@ function DiscountPage() {
         </form>
       </section>
 
-      {/* 2. Coupon Display Tiles / Cards */}
+      {/* 2. Coupon Display Section with Tabs */}
       <section>
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          Coupon Configurations Preview
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {coupons &&
-            coupons.map((coupon) => (
-              <div key={coupon?.id} className="space-y-8">
-                <div>
-                  <div className="bg-white rounded-2xl p-1 border border-gray-200 shadow-sm max-w-full">
-                    <div className="bg-gray-50 rounded-xl p-6 relative h-full">
-                      <div className="absolute top-4 right-4 bg-black text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                        {coupon?.coupon_percent
-                          ? `${coupon.coupon_percent}% OFF`
-                          : "DISCOUNT"}
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-900 mt-4 mb-2">
-                        {coupon?.discount_description || "Special Offer"}
-                      </h4>
-                      <div className="bg-gray-200 text-gray-800 font-mono text-center py-2 px-4 rounded-lg font-semibold tracking-widest mb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <h2 className="text-2xl font-bold text-gray-800">
+            Manage Your Coupons
+          </h2>
+
+          {/* Tab Menu */}
+          <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                  activeTab === tab
+                    ? "bg-white text-primary shadow-sm"
+                    : "text-gray-300 hover:text-gray-500 hover:bg-gray-100/50"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredCoupons.length === 0 ? (
+          <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+            <p className="text-gray-400 text-lg">
+              No {activeTab.toLowerCase()} found.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCoupons.map((coupon) => (
+              <div
+                key={coupon?.id}
+                className="group transition-all duration-300 hover:-translate-y-1"
+              >
+                <div
+                  className={`rounded-2xl p-1 border border-gray-100 shadow-sm hover:shadow-xl transition-shadow relative overflow-hidden ${
+                    activeTab === "Expired Coupons"
+                      ? "bg-red-400"
+                      : activeTab === "Used Coupons"
+                      ? "bg-gray-400"
+                      : "bg-green-200"
+                  }`}
+                >
+                  {/* Decorative Gradient Background */}
+                  {/* <div className={`absolute top-0 left-0 w-full h-1.5 ${activeTab === "Expired Coupons" ? "bg-red-400" :
+                      activeTab === "Used Coupons" ? "bg-gray-400" : "bg-blue-500"
+                    }`} /> */}
+
+                  <div className="bg-gray-50 rounded-xl p-6 relative h-64">
+                    {/* Badge */}
+                    <div
+                      className={`absolute top-4 right-4 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${
+                        activeTab === "Expired Coupons"
+                          ? "bg-red-500"
+                          : "bg-black"
+                      }`}
+                    >
+                      {coupon?.discount_percent
+                        ? `${coupon.discount_percent}% OFF`
+                        : coupon?.discount_price
+                        ? `₹${coupon.discount_price} OFF`
+                        : "DISCOUNT"}
+                    </div>
+
+                    <div className="text-lg font-bold text-gray-900 mb-2">
+                      {/* {coupon?.discount_description || "Special Offer"} */}
+                      {coupon?.referal_id ? (
+                        <div>
+                          <span className="flex items-center w-fit text-[16px] px-4 py-1.5 bg-gray-200 rounded-md">
+                            <LucideUser2 className="mr-2 h-4" /> Creator Coupon
+                          </span>
+                          <span className="text-sm px-3 font-light">
+                            Linked to Creator: {coupon.creator_name}
+                          </span>
+                        </div>
+                      ) : (
+                        <div>
+                          <span className="flex items-center w-fit text-[16px] px-4 py-1.5 bg-gray-200 rounded-md">
+                            <MdDiscount className="mr-2 h-4" /> Discount Coupon
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 mb-6">
+                      <div className="bg-white border border-dashed border-primary text-gray-600 font-mono text-center py-2 px-4 rounded-lg font-bold tracking-widest flex-1">
                         {coupon?.discount_code}
                       </div>
-                      <hr className="border-gray-200 mb-4" />
-                      <div className="flex justify-between items-center text-xs text-gray-500">
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-500">Usage Progress</span>
+                        <span className="font-semibold text-gray-700">
+                          {coupon?.current_usage_count || 0} /{" "}
+                          {coupon?.max_redemption || "∞"}
+                        </span>
+                      </div>
+
+                      {/* Simple Progress Bar */}
+                      {coupon?.max_redemption && (
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className="bg-blue-500 h-1.5 rounded-full"
+                            style={{
+                              width: `${Math.min(
+                                (coupon.current_usage_count /
+                                  coupon.max_redemption) *
+                                  100,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center text-xs pt-1">
                         <div>
-                          <p className="font-semibold text-gray-700">Limits</p>
-                          <p>
-                            {coupon?.max_redemption || "Unlimited"} uses total
+                          <p className="text-gray-400">Expires</p>
+                          <p className="font-medium text-gray-700">
+                            {coupon?.expires_at
+                              ? new Date(coupon.expires_at).toLocaleDateString()
+                              : "Never"}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-gray-700">
-                            Per User
+                          <p className="text-gray-400">Limit/User</p>
+                          <p className="font-medium text-gray-700">
+                            {coupon?.redemption_per_user || 1} Time
                           </p>
-                          <p>{coupon?.redemption_per_user || 1} time(s)</p>
                         </div>
                       </div>
                     </div>
@@ -261,7 +391,8 @@ function DiscountPage() {
                 </div>
               </div>
             ))}
-        </div>
+          </div>
+        )}
       </section>
     </div>
   );
