@@ -7,7 +7,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import "./App.css";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Account } from "./pages/AccountPage";
 import { Login } from "./pages/LoginPage";
 import { Register } from "./pages/Register";
@@ -35,6 +35,10 @@ function App() {
   const { user, loading } = useAuth();
   const [searchParams] = useSearchParams();
 
+  const [hasSeenLoader, setHasSeenLoader] = useState(
+    () => sessionStorage.getItem("hasSeenLoader") === "true"
+  );
+
   useEffect(() => {
     const checkLink = async () => {
       const link = searchParams.get("coupon");
@@ -44,28 +48,41 @@ function App() {
     };
 
     checkLink();
-  }, []);
+    
+    // Once loading is finished for the first time, mark it as seen
+    if (!loading && !hasSeenLoader) {
+      // We wait a bit for the slide-up animation to actually happen 
+      // before we technically "unmount" it for future reloads
+      const timer = setTimeout(() => {
+        sessionStorage.setItem("hasSeenLoader", "true");
+      }, 2000); 
+      return () => clearTimeout(timer);
+    }
+  }, [loading, hasSeenLoader]);
 
   return (
     <>
-      <div
-        className={
-          loading
-            ? "fixed flex justify-center items-center w-full h-full bg-black z-1000"
-            : "fixed flex justify-center items-center w-full h-full bg-black z-1000 transition duration-[1500ms] delay-100 ease-out -translate-y-full border-b border-white"
-        }
-      >
-        <div>
-          <img
-            src="/loading.gif"
-            alt="Cherrybrush"
-            className="h-40 w-40 mr-5"
-          />
+      {/* Splash Screen - only shows if never seen in this session */}
+      {!hasSeenLoader && (
+        <div
+          className={
+            loading
+              ? "fixed flex justify-center items-center w-full h-full bg-black z-1000"
+              : "fixed flex justify-center items-center w-full h-full bg-black z-1000 transition duration-[1500ms] delay-100 ease-out -translate-y-full border-b border-white"
+          }
+        >
+          <div>
+            <img
+              src="/loading.gif"
+              alt="Cherrybrush"
+              className="h-40 w-40 mr-5"
+            />
+          </div>
+          <div className=" text-lg text-white tracking-wider uppercase">
+            WEBSELL STORE
+          </div>
         </div>
-        <div className=" text-lg text-white tracking-wider uppercase">
-          WEBSELL STORE
-        </div>
-      </div>
+      )}
       <Routes>
         <Route element={<Layout />}>
           {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
